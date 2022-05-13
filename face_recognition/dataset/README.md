@@ -1,0 +1,1 @@
+En este directorio encontraremos folders con los nombres de los usuarios. dichos folders contendrán las imágenes de los usuarios que se usarán para entrenar a la red neuronal

@@ -1,1 +1,3 @@
-**/dataset
+!*
+face_recognition/dataset/*
+!README.md
