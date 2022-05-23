@@ -10,12 +10,11 @@ import time
 import cv2
 
 #Initialize 'currentname' to trigger only when a new person is identified.
-currentname = "unknown"
+currentname = "Desconocido"
 #Determine faces from encodings.pickle file model created from train_model.py
 encodingsP = "encodings.pickle"
 
-# load the known faces and embeddings along with OpenCV's Haar
-# cascade for face detection
+# load the known faces and embeddings along with OpenCV's Haar cascade for face detection (hog)
 print("[INFO] loading encodings + face detector...")
 data = pickle.loads(open(encodingsP, "rb").read())
 
@@ -23,8 +22,7 @@ data = pickle.loads(open(encodingsP, "rb").read())
 # Set the ser to the followng
 # src = 0 : for the build in single web cam, could be your laptop webcam
 # src = 2 : I had to set it to 2 inorder to use the USB webcam attached to my laptop
-vs = VideoStream(src=0,framerate=10).start()
-#vs = VideoStream(usePiCamera=True).start()
+vs = VideoStream(src=2,framerate=10).start()
 time.sleep(2.0)
 
 # start the FPS counter
@@ -32,11 +30,10 @@ fps = FPS().start()
 
 # loop over frames from the video file stream
 while True:
-	# grab the frame from the threaded video stream and resize it
-	# to 500px (to speedup processing)
+	# grab the frame from the threaded video stream and resize it to 500px (to speedup processing)
 	frame = vs.read()
 	frame = imutils.resize(frame, width=500)
-	# Detect the fce boxes
+	# Detect the face boxes
 	boxes = face_recognition.face_locations(frame)
 	# compute the facial embeddings for each face bounding box
 	encodings = face_recognition.face_encodings(frame, boxes)
@@ -46,10 +43,8 @@ while True:
 	for encoding in encodings:
 		# attempt to match each face in the input image to our known
 		# encodings
-		matches = face_recognition.compare_faces(data["encodings"],
-			encoding)
-		name = "Unknown" #if face is not recognized, then print Unknown
-
+		matches = face_recognition.compare_faces(data["encodings"],encoding)
+		name = "Deconocido" #if face is not recognized, then print Unknown
 		# check to see if we have found a match
 		if True in matches:
 			# find the indexes of all matched faces then initialize a
