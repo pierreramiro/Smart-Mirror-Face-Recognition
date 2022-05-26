@@ -60,7 +60,7 @@ while True:
 				counts[name] = counts.get(name, 0) + 1
 
 			# determine the recognized face with the largest number
-			# of votes (note: in the event of an unlikely tie Python
+			# of votes (NOTE: in the event of an unlikely tie Python
 			# will select first entry in the dictionary)
 			name = max(counts, key=counts.get)
 
