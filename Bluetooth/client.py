@@ -1,7 +1,7 @@
 from bluetooth import *
 
 server_addr = "xx:xx:xx:xx:xx:xx"
-port = 1030
+port = 1031
 sock = BluetoothSocket(RFCOMM)
 sock.connect((server_addr, port))
 
