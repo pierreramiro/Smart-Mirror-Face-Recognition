@@ -4,7 +4,7 @@ import bluetooth
 import RPi.GPIO as GPIO #Libreria para el manejo de pines
 GPIO.setmode(GPIO.BOARD)
 
-host = ""
+host = "E4:5F:01:8B:EF:84"
 port = 1
 
 server = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
