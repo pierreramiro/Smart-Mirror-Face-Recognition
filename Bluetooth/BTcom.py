@@ -1,3 +1,11 @@
+# import wiringpi
+# wiringpi.wiringPiSetup()
+# serial=wiringpi.serialOpen('/dev/ttyAMA0',9600)
+# wiringpi.serialPuts(serial,'A')
+# #wiringpi.seri
+
+
+
 '''
 UART communication on Raspberry Pi using Pyhton
 http://www.electronicwings.com

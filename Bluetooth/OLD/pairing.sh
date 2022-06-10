@@ -3,13 +3,19 @@ sudo service bluetooth restart
 sleep 2
 sudo /etc/init.d/bluetooth stop
 sudo /etc/init.d/bluetooth start #enciende el bluetooth
-#sudo /etc/init.d/bluetooth stop #apaga el bluetooth
 sudo hciconfig hci0 piscan #makes discoverable
+sudo systemctl enable bluetooth-autoconnect.service
+sudo systemctl start bluetooth-autoconnect.service
 #Habilitamos
+echo "agent off" | bluetoothctl
+#echo "power off" | bluetoothctl
 echo "power on" | bluetoothctl
-echo "agent on" | bluetoothctl
+echo "agent NoInputNoOutput" | bluetoothctl
 echo "scan on" | bluetoothctl
 echo "discoverable on" | bluetoothctl
+echo "pairable on" | bluetoothctl
+echo "agent on" | bluetoothctl
+echo "default-agent" | bluetoothctl
 sleep 2
 python3 ~/Documents/Github/Smart-Mirror-Face-Recognition/Bluetooth/EI_Bluetooth.py
 
