@@ -1,0 +1,8 @@
+Encendido y apagado de bluetooth
+https://askubuntu.com/questions/380096/turn-on-off-bluetooth-from-shell-not-from-applet
+
+Coneccion automatica bluetooth
+https://unix.stackexchange.com/questions/334386/how-to-set-up-automatic-connection-of-bluetooth-headset
+
+#Coneccion a blue terminal app error fixed
+https://forums.raspberrypi.com/viewtopic.php?t=138544
