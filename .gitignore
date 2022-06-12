@@ -1,3 +1,4 @@
 !*
 face_recognition/dataset/*
+*__pycache__
 !README.md
