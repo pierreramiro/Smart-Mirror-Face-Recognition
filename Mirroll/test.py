@@ -2,14 +2,25 @@ import sys
 import time
 
 from PyQt5.QtCore import QTimer, QTime, QDate
-
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QPushButton
+from PyQt5.QtGui import QImage,QPixmap
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QPushButton, QVBoxLayout,QLabel
 
 
 class warningBox (QDialog):
     def __init__(self,parent=None):
         super(warningBox,self).__init__(parent)
+        #nombre a la ventana
         self.setWindowTitle("HELLO!")
+        #Creo un layout
+        self.layout = QVBoxLayout()
+        # loading image
+        image = QImage('resources/facePostions.jpeg')
+        self.imageLabel = QLabel()
+        self.imageLabel.setPixmap(QPixmap.fromImage(image))
+        self.layout.addWidget(self.imageLabel)
+        # Configuramos el layout
+        self.setLayout(self.layout)
+
         self.timer=QTimer()
         self.timer.timeout.connect(self.CloseWarning)
         self.timer.start(1000)
