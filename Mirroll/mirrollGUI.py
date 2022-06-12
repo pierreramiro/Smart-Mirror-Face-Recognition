@@ -12,17 +12,28 @@ import serial #uart
     //               Clases                 //
     //////////////////////////////////////////
 """ 
+class warningBox (QtWidgets.QDialog):
+    def __init__(self,parent=None):
+        super(warningBox,self).__init__(parent)
+        self.setWindowTitle("HELLO!")
+        self.timer=QTimer()
+        self.timer.timeout.connect(self.CloseWarning)
+        self.timer.start(1000)
+        
+    def CloseWarning(self):
+        print("cerrando")
+        self.close()
+    
+    def closeEvent(self, event):
+        self.timer.stop()
+        event.accept()
+
 class mirrollGUI(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         #Creamos nuestra GUI
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        #Configuramos los pines del Raspberry
-        self.ConfigRaspberryGPIO()
-        #Bajamos el espejo
-        self.BajarEspejo()
-
         #Definimos unas variables globales
         self.estadoS1= True
         self.estadoS2= True
@@ -31,23 +42,30 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.hora_actual="18:00 pm"
         self.temperatura_actual="21"
         self.ui.temperatura.setText(self.temperatura_actual)        
-        #Creamos un timer
-        self.timer = QTimer(self)
+        #Configuramos los pines del Raspberry
+        self.ConfigRaspberryGPIO()
+        #Bajamos el espejo
+        self.BajarEspejo()
         #Hacemos la connect de los eventos
         self.setUpConnect()
-        #Iniciamos el timer
-        self.timer.start(1000)
+        """Creamos distintos timer que realizarán un sondeo (Poll) y actualizarán datos"""
+        #Timer para actualizar los PARAMETROS DE LA INTERFAZ
+        self.timer_Params = QTimer(self)
+        self.timer_Params.timeout.connect(self.displayFecha)
+        self.timer_Params.timeout.connect(self.displayHora)
+        self.timer_Params.timeout.connect(self.actualizar)
+        self.timer_Params.start(500)
+        #Timer para escuchar al BLUETOOTH
+        self.timer_BT = QTimer(self)
+        self.timer_BT.timeout.connect(self.sondeoBT)
+        self.timer_BT.start(5)
+        
+        #Timer para escuchar al SENSOR ULTRASONIDO
+        self.timer_HCSR = QTimer(self)
 
-    """######################"""
-    """Conectamos los eventos"""
-    """######################"""
-    def setUpConnect(self):
-        self.timer.timeout.connect(self.displayFecha)
-        self.timer.timeout.connect(self.displayHora)
-        self.timer.timeout.connect(self.actualizar)
 
     """########################"""
-    """Establecemos los métodos"""
+    """Establecemos los métodos/funciones"""
     """########################"""
     def actualizar(self):
         if self.estadoS1 == False:
@@ -171,6 +189,12 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Deshabilitamos el driver del motor
         gpio.output(self.ENApin,gpio.HIGH)
 
+    def sondeoBT(self):
+        """analizamos si se tiene presionó el botón"""
+        if gpio.input(self.BUTTONpin)==gpio.LOW:
+            #ponemos un popup de Botón presionado
+            dlg = warningBox(self)
+            dlg.show()
 
 
 """ //////////////////////////////////////////

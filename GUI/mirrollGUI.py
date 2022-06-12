@@ -9,6 +9,22 @@ import time
     //               Clases                 //
     //////////////////////////////////////////
 """ 
+class warningBox (QtWidgets.QDialog):
+    def __init__(self,parent=None):
+        super(warningBox,self).__init__(parent)
+        self.setWindowTitle("Me voy a cerrar!")
+        self.timer=QTimer()
+        self.timer.timeout.connect(self.CloseWarning)
+        self.timer.start(1000)
+        
+    def CloseWarning(self):
+        print("cerrando")
+        self.close()
+    
+    def closeEvent(self, event):
+        self.timer.stop()
+        event.accept()
+
 class mirrollGUI(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
@@ -30,6 +46,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.setUpConnect()
         #Iniciamos el timer
         self.timer.start(1000)
+        #self.CreateDialog()
 
     """######################"""
     """Conectamos los eventos"""
@@ -70,7 +87,11 @@ class mirrollGUI(QtWidgets.QMainWindow):
         displayHora = currentHora.toString('hh:mm')
         self.ui.hora.setText(displayHora)
 
+    def CreateDialog(self):
+        dlg = warningBox(self)
+        dlg.show()
 
+    
 """ //////////////////////////////////////////
     //                Main                  //
     //////////////////////////////////////////
