@@ -5,11 +5,17 @@ from PyQt5.QtCore import QTimer, QTime, QDate
 import time
 
 
+""" //////////////////////////////////////////
+    //               Clases                 //
+    //////////////////////////////////////////
+""" 
 class mirrollGUI(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
+        #Creamos nuestra GUI
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
         #Definimos unas variables globales
         self.estadoS1= True
         self.estadoS2= True
@@ -64,11 +70,13 @@ class mirrollGUI(QtWidgets.QMainWindow):
         displayHora = currentHora.toString('hh:mm')
         self.ui.hora.setText(displayHora)
 
+
 """ //////////////////////////////////////////
     //                Main                  //
     //////////////////////////////////////////
 """ 
-def setUpWindow():
+def setUpMirrollGUI():
+
     #Creamos la app
     app = QtWidgets.QApplication(sys.argv)  
     #Creamos el visualizador, solo la pantalla
