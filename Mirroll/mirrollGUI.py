@@ -1,7 +1,8 @@
 from MainWindow import Ui_MainWindow
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTimer, QTime, QDate
+from PyQt5.QtCore import QTimer, QTime, QDate, 
+from PyQt5.QtGui import QImage,QPixmap
 import time
 
 #Librería para el control del Raspberry
@@ -12,9 +13,40 @@ import serial #uart
     //               Clases                 //
     //////////////////////////////////////////
 """ 
-class warningBox (QtWidgets.QDialog):
+class BT_DialogBox (QtWidgets.QDialog):
     def __init__(self,parent=None):
-        super(warningBox,self).__init__(parent)
+        super(BT_DialogBox,self).__init__(parent)
+        #Ponemos un nombre a la ventana
+        self.setWindowTitle("Notificación")
+        #creo el layout de nuestra ventana (vertical)
+        self.layout=QtWidgets.QVBoxLayout 
+        #Creo el texto a mostrar
+        message = QtWidgets.QLabel("Se ha presionado el botón. Recibiendo información Bluetooth")
+        self.layout.addWidget(message)
+        #Creo la imagen
+        image = QImage('resources/Bluetooth.png')
+        self.imageLabel = QtWidgets.QLabel()
+        self.imageLabel.setPixmap(QPixmap.fromImage(image))
+        self.layout.addWidget(self.imageLabel)
+        #Configuramos el layout
+        self.setLayout(self.layout)
+
+        self.timer=QTimer()
+        self.timer.timeout.connect(self.CloseWarning)
+        self.timer.start(1000)
+        
+    def CloseWarning(self):
+        print("cerrando")
+        self.close()
+    
+    def closeEvent(self, event):
+        self.timer.stop()
+        event.accept()
+
+
+class NewUser_DialogBox (QtWidgets.QDialog):
+    def __init__(self,parent=None):
+        super(NewUser_DialogBox,self).__init__(parent)
         self.setWindowTitle("HELLO!")
         self.timer=QTimer()
         self.timer.timeout.connect(self.CloseWarning)
