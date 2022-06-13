@@ -26,7 +26,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         message = QtWidgets.QLabel("Se ha presionado el botón. Recibiendo información Bluetooth")
         self.layout.addWidget(message)
         #Creo la imagen
-        image = QImage('resources/Bluetooth.png')
+        image = QImage('resources/Bluetooth.jpeg')
         self.imageLabel = QtWidgets.QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
         self.layout.addWidget(self.imageLabel)
@@ -37,7 +37,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         #Creamos timer para sondear datos
         self.timer_Datos=QTimer()
         self.timer_Datos.timeout.connect(self.sondeaDatos)
-        self.timer_Datos.start(30)
+        self.timer_Datos.start(300)
 
     def sondeaDatos(self):
         #recibir data
@@ -78,6 +78,10 @@ class BT_DialogBox (QtWidgets.QDialog):
                 parent.perfiles[idUser][2]=BINtomacorrientes
 
             elif received_data[0]==3:
+                parent=self.parent()
+                #activamos nuevamente el sondeo
+                parent.waitingBT=1
+                parent.timer_BT.start(5)
                 #Cerramos aplicacion
                 self.close()
             else:
@@ -86,7 +90,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         
     #Esta función por si sola nos permite aceptar el evento de cierre (not modified)
     def closeEvent(self, event):
-        self.timer.stop()
+        self.timer_Datos.stop()
         event.accept()
 
 class configureUser_DialogBox (QtWidgets.QDialog):
@@ -130,6 +134,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.ConfigRaspberryGPIO()
         #Bajamos el espejo
         self.BajarEspejo()
+        #Habilitamos para esperar conexion BT
+        self.waitingBT=1
         """Creamos distintos timer que realizarán un sondeo (Poll) y actualizarán datos"""
         #Timer para actualizar los PARAMETROS DE LA INTERFAZ
         self.timer_Params = QTimer(self)
@@ -283,11 +289,14 @@ class mirrollGUI(QtWidgets.QMainWindow):
 
     def sondeoBT(self):
         """analizamos si se tiene presionó el botón"""
-        if gpio.input(self.BUTTONpin)==gpio.LOW:
-            #ponemos un popup de Botón presionado
+        if gpio.input(self.BUTTONpin)==gpio.LOW and self.waitingBT==1:
+            #Detenemos el sondeo
+            self.timer_BT.stop()
+            self.waitingBT=0
+            #ponemos un popup de BT activado
             dlg = BT_DialogBox(self)
             dlg.show()
-
+            
 
 """ //////////////////////////////////////////
     //                Main                  //
