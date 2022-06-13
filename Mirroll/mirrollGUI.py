@@ -1,7 +1,7 @@
 from MainWindow import Ui_MainWindow
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTimer, QTime, QDate, 
+from PyQt5.QtCore import QTimer, QTime, QDate
 from PyQt5.QtGui import QImage,QPixmap
 import time
 
@@ -21,7 +21,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         #Ponemos un nombre a la ventana
         self.setWindowTitle("Notificación")
         #creo el layout de nuestra ventana (vertical)
-        self.layout=QtWidgets.QVBoxLayout 
+        self.layout=QtWidgets.QVBoxLayout()
         #Creo el texto a mostrar
         message = QtWidgets.QLabel("Se ha presionado el botón. Recibiendo información Bluetooth")
         self.layout.addWidget(message)
