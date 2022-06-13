@@ -9,6 +9,8 @@ import time
 import RPi.GPIO as gpio
 import serial #uart
 
+colores=["azul","rojo","blanco","verde","amarillo"]
+
 """ //////////////////////////////////////////
     //               Clases                 //
     //////////////////////////////////////////
@@ -30,23 +32,66 @@ class BT_DialogBox (QtWidgets.QDialog):
         self.layout.addWidget(self.imageLabel)
         #Configuramos el layout
         self.setLayout(self.layout)
+        #Abrir puerto
+        self.ser = serial.Serial ("/dev/ttyS0", 9600)    #Open port with baud rate
+        #Creamos timer para sondear datos
+        self.timer_Datos=QTimer()
+        self.timer_Datos.timeout.connect(self.sondeaDatos)
+        self.timer_Datos.start(30)
 
-        self.timer=QTimer()
-        self.timer.timeout.connect(self.CloseWarning)
-        self.timer.start(1000)
+    def sondeaDatos(self):
+        #recibir data
+        received_data = self.ser.read()              #read serial port
+        time.sleep(0.03)
+        data_left = self.ser.inWaiting()             #check for remaining byte
+        received_data += self.ser.read(data_left)
+        if len(received_data)!=0:
+            #Decodificamos data
+            received_data=eval(received_data.decode())
+            #Con el primer elemento podemos revisar que función aplicamos
+            if received_data[0]==0:
+                """Trama de configurar rostro"""
+                print("Al usuario: ",received_data[1],"Le modificaremos su rostro")
+            
+            elif received_data[0]==1:
+                """Trama como usuario básico"""
+                idUser=received_data[1]-1
+                color=received_data[2]
+                print("El usuario: ",idUser,"tiene color: ", color)
+                parent=self.parent()
+                #obtengo el usuario que se va a mostrar
+                parent.IdUserToShow=idUser
+                #Obtengo el Id del color a modificar
+                parent.perfiles[idUser]=colores.index(color)
+
+            elif received_data[0]==2:
+                """Trama como admin"""
+                idUser=received_data[1]-1
+                color=received_data[2]
+                BINtomacorrientes=str(received_data[3])
+                print("El usuario: ",idUser,"tiene color: ", color,"y se activan:",BINtomacorrientes)
+                parent=self.parent()
+                #obtengo el usuario que se va a mostrar
+                parent.IdUserToShow=idUser
+                #Obtengo el Id del color a modificar
+                parent.perfiles[idUser][1]=colores.index(color)
+                parent.perfiles[idUser][2]=BINtomacorrientes
+
+            elif received_data[0]==3:
+                #Cerramos aplicacion
+                self.close()
+            else:
+                print("función no creada")
+            #verificar si se desconecta
         
-    def CloseWarning(self):
-        print("cerrando")
-        self.close()
-    
+    #Esta función por si sola nos permite aceptar el evento de cierre (not modified)
     def closeEvent(self, event):
         self.timer.stop()
         event.accept()
 
-
-class NewUser_DialogBox (QtWidgets.QDialog):
+class configureUser_DialogBox (QtWidgets.QDialog):
     def __init__(self,parent=None):
-        super(NewUser_DialogBox,self).__init__(parent)
+        super(configureUser_DialogBox,self).__init__(parent)
         self.setWindowTitle("HELLO!")
         self.timer=QTimer()
         self.timer.timeout.connect(self.CloseWarning)
@@ -66,10 +111,17 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Creamos nuestra GUI
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        #Definimos unas variables globales
-        self.estadoS1= True
-        self.estadoS2= True
-        self.estadoS3= True
+        #Definimos 10 perfiles por defecto
+        temp=[]
+        for i in range(10):
+            temp.append([i,0,"111"])
+        self.perfiles=temp
+        #Indicamos el usuario a mostrar su personalización
+        self.IdUserToShow=0
+        self.estadoS1= "1"==self.perfiles[self.IdUserToShow][2][0]
+        self.estadoS2= "1"==self.perfiles[self.IdUserToShow][2][1]
+        self.estadoS3= "1"==self.perfiles[self.IdUserToShow][2][2]
+        #Establecemos info por defecto
         self.fecha_actual="viernes, 10 de junio del 2022"
         self.hora_actual="18:00 pm"
         self.temperatura_actual="21"
@@ -78,8 +130,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.ConfigRaspberryGPIO()
         #Bajamos el espejo
         self.BajarEspejo()
-        #Hacemos la connect de los eventos
-        self.setUpConnect()
         """Creamos distintos timer que realizarán un sondeo (Poll) y actualizarán datos"""
         #Timer para actualizar los PARAMETROS DE LA INTERFAZ
         self.timer_Params = QTimer(self)
@@ -96,22 +146,32 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.timer_HCSR = QTimer(self)
 
 
-    """########################"""
+
+    """##################################"""
     """Establecemos los métodos/funciones"""
-    """########################"""
+    """##################################"""
     def actualizar(self):
+        #Chequeamos los estados
+        self.estadoS1= "1"==self.perfiles[self.IdUserToShow][2][0]
+        self.estadoS2= "1"==self.perfiles[self.IdUserToShow][2][1]
+        self.estadoS3= "1"==self.perfiles[self.IdUserToShow][2][2]
+        #Chequeamos el estado
         if self.estadoS1 == False:
             #Hacemos la impresion que se tiene ha soltado el botón
             self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
-            self.estadoS1=True
         else:
             #Hacemos la impresion que se tiene presionado el botón
             self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-            self.estadoS1=False
         if self.estadoS2 == False:
             self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
+        else:
+            self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
+            
         if self.estadoS3 == False:
             self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
+        else:
+            self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
+            
     
     def displayFecha(self):   
         currentFecha = QDate.currentDate()
@@ -225,7 +285,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         """analizamos si se tiene presionó el botón"""
         if gpio.input(self.BUTTONpin)==gpio.LOW:
             #ponemos un popup de Botón presionado
-            dlg = warningBox(self)
+            dlg = BT_DialogBox(self)
             dlg.show()
 
 
