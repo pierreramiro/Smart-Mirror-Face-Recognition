@@ -235,16 +235,16 @@ class mirrollGUI(QtWidgets.QMainWindow):
 
         ######## CONTROL LUCES #######
         self.LREDpin=18
-        self.LREDpin=23
-        self.LREDpin=24
+        self.LGREENpin=23
+        self.LBLUEpin=24
         #Configuramos como salidas
         gpio.setup(self.LREDpin,gpio.OUT)
-        gpio.setup(self.LREDpin,gpio.OUT)
-        gpio.setup(self.LREDpin,gpio.OUT)
+        gpio.setup(self.LGREENpin,gpio.OUT)
+        gpio.setup(self.LBLUEpin,gpio.OUT)
         #Configuramos todo en LOW
         gpio.output(self.LREDpin,gpio.LOW)
-        gpio.output(self.LREDpin,gpio.LOW)
-        gpio.output(self.LREDpin,gpio.LOW)
+        gpio.output(self.LGREENpin,gpio.LOW)
+        gpio.output(self.LBLUEpin,gpio.LOW)
 
         ######## ENTRADA BOTON #######
         self.BUTTONpin=25
@@ -255,7 +255,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Trigger pin
         self.TRIGpin=16
         gpio.setup(self.TRIGpin,gpio.OUT)
-        gpio.output(self.LREDpin,gpio.LOW)
+        gpio.output(self.TRIGpin,gpio.LOW)
         #Echo pin
         self.ECHOpin=12
         gpio.setup(self.ECHOpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)

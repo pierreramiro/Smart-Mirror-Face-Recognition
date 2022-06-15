@@ -2,14 +2,34 @@
 import RPi.GPIO as gpio
 import time
 
-gpio.setmode(gpio.BOARD)
-gpio.setup(12, gpio.OUT)
+LREDpin=18
+LGREENpin=23
+LBLUEpin=24
+#Configuramos la convecion de pines
+gpio.setmode(gpio.BCM)
+#Configuramos como salidas  
+gpio.setup(LREDpin,gpio.OUT)
+gpio.setup(LGREENpin,gpio.OUT)
+gpio.setup(LBLUEpin,gpio.OUT)
+#Configuramos todo en LOW
+gpio.output(LREDpin,gpio.LOW)
+gpio.output(LGREENpin,gpio.LOW)
+gpio.output(LBLUEpin,gpio.LOW)
 
-for x in range (0, 10):
+rojo=[gpio.HIGH,gpio.LOW,gpio.LOW]
+verde=[gpio.LOW,gpio.HIGH,gpio.LOW]
+azul=[gpio.LOW,gpio.LOW,gpio.HIGH]
+amarillo=[gpio.HIGH,gpio.HIGH,gpio.LOW]
+cian=[gpio.LOW,gpio.HIGH,gpio.HIGH]
+rosado=[gpio.HIGH,gpio.LOW,gpio.HIGH]
+blanco=[gpio.HIGH,gpio.HIGH,gpio.HIGH]
+colores=["rojo","verde","azul","amarillo","cian","rosado","blanco"]
+coloresGPIO=[rojo,verde,azul,amarillo,cian,rosado,blanco]
 
-    gpio.output(12, True)
-    time.sleep(0.5)
-    gpio.output(12, False)
-    time.sleep(0.5)
-
-print ("Ejecución finalizada")
+#main
+color="rojo"
+#ponemos color
+idColor=colores.index(color)
+gpio.output(LREDpin,coloresGPIO[idColor][0])
+gpio.output(LGREENpin,coloresGPIO[idColor][1])
+gpio.output(LBLUEpin,coloresGPIO[idColor][2])
