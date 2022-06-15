@@ -9,7 +9,15 @@ import time
 import RPi.GPIO as gpio
 import serial #uart
 
-colores=["azul","rojo","blanco","verde","amarillo"]
+rojo=[gpio.HIGH,gpio.LOW,gpio.LOW]
+verde=[gpio.LOW,gpio.HIGH,gpio.LOW]
+azul=[gpio.LOW,gpio.LOW,gpio.HIGH]
+amarillo=[gpio.HIGH,gpio.HIGH,gpio.LOW]
+cian=[gpio.LOW,gpio.HIGH,gpio.HIGH]
+rosado=[gpio.HIGH,gpio.LOW,gpio.HIGH]
+blanco=[gpio.HIGH,gpio.HIGH,gpio.HIGH]
+colores=["rojo","verde","azul","amarillo","cian","rosado","blanco"]
+coloresGPIO=[rojo,verde,azul,amarillo,cian,rosado,blanco]
 
 """ //////////////////////////////////////////
     //               Clases                 //
@@ -40,7 +48,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         self.timer_Datos.start(300)
 
     def sondeaDatos(self):
-        #recibir data
+        #recibir data:   [funcion,idUser,color,BINtomacorrientes,altura]
         received_data = self.ser.read()              #read serial port
         time.sleep(0.03)
         data_left = self.ser.inWaiting()             #check for remaining byte
@@ -69,11 +77,13 @@ class BT_DialogBox (QtWidgets.QDialog):
                 idUser=received_data[1]-1
                 color=received_data[2]
                 BINtomacorrientes=str(received_data[3])
-                print("El usuario: ",idUser,"tiene color: ", color,"y se activan:",BINtomacorrientes)
+                altura=received_data[4]
+                print("El usuario: ",idUser,"tiene color: ", color,"se activan:",BINtomacorrientes,"y altura:",altura)
                 parent=self.parent()
                 #obtengo el usuario que se va a mostrar
                 parent.IdUserToShow=idUser
                 #Obtengo el Id del color a modificar
+                parent.perfiles[idUser][0]=altura
                 parent.perfiles[idUser][1]=colores.index(color)
                 parent.perfiles[idUser][2]=BINtomacorrientes
 
@@ -118,7 +128,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Definimos 10 perfiles por defecto
         temp=[]
         for i in range(10):
-            temp.append([i,0,"111"])
+            temp.append([6,0,"111"]) # guardamos los datos de los perfiles [altura,idColor,binData]
         self.perfiles=temp
         #Indicamos el usuario a mostrar su personalización
         self.IdUserToShow=0
@@ -177,7 +187,11 @@ class mirrollGUI(QtWidgets.QMainWindow):
             self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
         else:
             self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-            
+        #actualizamos el color
+        idColor=self.perfiles[self.IdUserToShow][1]
+        gpio.output(self.LREDpin,coloresGPIO[idColor][0])
+        gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
+        gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
     
     def displayFecha(self):   
         currentFecha = QDate.currentDate()
