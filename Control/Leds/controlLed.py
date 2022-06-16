@@ -25,11 +25,11 @@ rosado=[gpio.HIGH,gpio.LOW,gpio.HIGH]
 blanco=[gpio.HIGH,gpio.HIGH,gpio.HIGH]
 colores=["rojo","verde","azul","amarillo","cian","rosado","blanco"]
 coloresGPIO=[rojo,verde,azul,amarillo,cian,rosado,blanco]
-
-#main
-color="rojo"
-#ponemos color
-idColor=colores.index(color)
-gpio.output(LREDpin,coloresGPIO[idColor][0])
-gpio.output(LGREENpin,coloresGPIO[idColor][1])
-gpio.output(LBLUEpin,coloresGPIO[idColor][2])
+while True:
+    #main
+    color="blanco"
+    #ponemos color
+    idColor=colores.index(color)
+    gpio.output(LREDpin,coloresGPIO[idColor][0])
+    gpio.output(LGREENpin,coloresGPIO[idColor][1])
+    gpio.output(LBLUEpin,coloresGPIO[idColor][2])

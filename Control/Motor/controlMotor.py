@@ -3,28 +3,6 @@
 import RPi.GPIO as gpio
 import time
 
-#Configuramos la convecion de pines
-gpio.setmode(gpio.BCM)
-######## CONTROL MOTOR #######
-ENApin=17
-DIRpin=27
-PULpin=22
-LSUPpin=5
-LSDOWNpin=6
-#Configuramos como salidas
-gpio.setup(ENApin,gpio.OUT)
-gpio.setup(DIRpin,gpio.OUT)
-gpio.setup(PULpin,gpio.OUT)
-#Configuramos todo en LOW
-gpio.output(ENApin,gpio.HIGH)
-gpio.output(DIRpin,gpio.LOW)
-gpio.output(PULpin,gpio.LOW)
-
-
-
-
-
-
 def BajarEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
     #Habilitamos el driver del motor
     gpio.output(ENApin,gpio.LOW)
@@ -80,7 +58,35 @@ def SubirEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
     #Deshabilitamos el driver del motor
     gpio.output(ENApin,gpio.HIGH)
 
+if __name__=="__main__":
+    #Bajamos el espejo hasta sentir el limit switch
+    #Configuramos la convecion de pines
+    gpio.setmode(gpio.BCM)
+    ######## CONTROL MOTOR #######
+    ENApin=17
+    DIRpin=27
+    PULpin=22
+    #Configuramos como salidas
+    gpio.setup(ENApin,gpio.OUT)
+    gpio.setup(DIRpin,gpio.OUT)
+    gpio.setup(PULpin,gpio.OUT)
+    #Configuramos todo en LOW
+    gpio.output(ENApin,gpio.HIGH)
+    gpio.output(DIRpin,gpio.LOW)
+    gpio.output(PULpin,gpio.LOW)
 
-#Bajamos el espejo hasta sentir el limit switch
-while True:
-    BajarEspejo()
+    ####limits
+    LSUPpin=5
+    LSDOWNpin=6
+    #Configuramos como entradas
+    gpio.setup(LSUPpin,gpio.IN,pull_up_down=gpio.PUD_UP)
+    gpio.setup(LSDOWNpin,gpio.IN,pull_up_down=gpio.PUD_UP)
+
+    while True:
+
+        gpio.output(ENApin,gpio.HIGH) 
+
+        gpio.output(DIRpin,gpio.HIGH) 
+
+        gpio.output(PULpin,gpio.HIGH) 
+        # BajarEspejo()
