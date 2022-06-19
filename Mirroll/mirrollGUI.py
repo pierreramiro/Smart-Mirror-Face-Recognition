@@ -8,13 +8,14 @@ import time
 #Librería para el control del Raspberry
 import RPi.GPIO as gpio
 import serial #uart
+gpio.setwarnings(False)
 
-rojo=[gpio.HIGH,gpio.LOW,gpio.LOW]
-verde=[gpio.LOW,gpio.HIGH,gpio.LOW]
+rojo=[gpio.LOW,gpio.HIGH,gpio.LOW]
+verde=[gpio.HIGH,gpio.LOW,gpio.LOW]
 azul=[gpio.LOW,gpio.LOW,gpio.HIGH]
 amarillo=[gpio.HIGH,gpio.HIGH,gpio.LOW]
-cian=[gpio.LOW,gpio.HIGH,gpio.HIGH]
-rosado=[gpio.HIGH,gpio.LOW,gpio.HIGH]
+cian=[gpio.HIGH,gpio.LOW,gpio.HIGH]
+rosado=[gpio.LOW,gpio.HIGH,gpio.HIGH]
 blanco=[gpio.HIGH,gpio.HIGH,gpio.HIGH]
 colores=["rojo","verde","azul","amarillo","cian","rosado","blanco"]
 coloresGPIO=[rojo,verde,azul,amarillo,cian,rosado,blanco]
@@ -55,6 +56,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         received_data += self.ser.read(data_left)
         if len(received_data)!=0:
             #Decodificamos data
+            print(received_data)
             received_data=eval(received_data.decode())
             #Con el primer elemento podemos revisar que función aplicamos
             if received_data[0]==0:
@@ -128,7 +130,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Definimos 10 perfiles por defecto
         temp=[]
         for i in range(10):
-            temp.append([6,0,"111"]) # guardamos los datos de los perfiles [altura,idColor,binData]
+            temp.append([0,1,"111"]) # guardamos los datos de los perfiles [altura,idColor,binData]
         self.perfiles=temp
         #Indicamos el usuario a mostrar su personalización
         self.IdUserToShow=0
@@ -175,17 +177,23 @@ class mirrollGUI(QtWidgets.QMainWindow):
         if self.estadoS1 == False:
             #Hacemos la impresion que se tiene ha soltado el botón
             self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
+            gpio.output(self.CH1pin,gpio.LOW)        
         else:
             #Hacemos la impresion que se tiene presionado el botón
             self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
+            gpio.output(self.CH1pin,gpio.HIGH)
         if self.estadoS2 == False:
+            gpio.output(self.CH2pin,gpio.LOW)
             self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
         else:
+            gpio.output(self.CH2pin,gpio.HIGH)
             self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
             
         if self.estadoS3 == False:
             self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
+            gpio.output(self.CH3pin,gpio.LOW)
         else:
+            gpio.output(self.CH3pin,gpio.HIGH)
             self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
         #actualizamos el color
         idColor=self.perfiles[self.IdUserToShow][1]
@@ -224,6 +232,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.DIRpin,gpio.LOW)
         gpio.output(self.PULpin,gpio.LOW)
         
+        gpio.setup(21,gpio.OUT)
+        gpio.output(21,gpio.HIGH)
         ######## CONTROL CARGAS #######
         self.CH1pin=10
         self.CH2pin=9     

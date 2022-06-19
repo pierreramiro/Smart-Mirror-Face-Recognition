@@ -84,9 +84,7 @@ if __name__=="__main__":
 
     while True:
 
-        gpio.output(ENApin,gpio.HIGH) 
-
-        gpio.output(DIRpin,gpio.HIGH) 
-
-        gpio.output(PULpin,gpio.HIGH) 
-        # BajarEspejo()
+        #gpio.output(ENApin,gpio.HIGH)
+        #gpio.output(DIRpin,gpio.LOW)
+        #gpio.output(PULpin,gpio.HIGH)
+        BajarEspejo()
