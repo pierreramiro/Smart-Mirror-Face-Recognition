@@ -1,0 +1,6 @@
+Rango de medicion:2-400 cm
+Tiempo de pulso del trigger requerido: 10us
+tiempo de duracion del EchoPulse: 150us to 25ms
+Distancia=timeInMicrosecEcho*0.034/2
+
+Tener cuidado con objetos con superficies muy suaves!
