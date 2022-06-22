@@ -50,7 +50,7 @@ class Window(QWidget):
         gpio.output(self.TRIGpin,gpio.HIGH)
         t1=time.time()
         #esperamos a cumplir los 10usec
-        while time.time()<t1+0.000015:
+        while time.time()<t1+0.000015: #nosotros esperamos hasta 15us
             pass
         gpio.output(self.TRIGpin,gpio.LOW)
         #Esperamos el echo en HIGH
