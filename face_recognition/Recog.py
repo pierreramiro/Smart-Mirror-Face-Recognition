@@ -1,5 +1,7 @@
 import sys
 from tkinter import Button
+
+from click import echo
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -7,6 +9,8 @@ from PyQt5.QtCore import *
 #Librería para el control del Raspberry
 import RPi.GPIO as gpio
 gpio.setwarnings(False)
+
+import time
 
 #Liberia para
 
@@ -18,6 +22,9 @@ class Window(QWidget):
         self.setWindowTitle("Face Recog.")
         #Resize window
         self.resize(400, 600)
+        #Creamos variables
+        self.maxDistance= 150#maxima distancia en cm
+        self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO
         # Create a QVBoxLayout instance
         layout = QVBoxLayout()
         #Creamos el boton
@@ -33,15 +40,34 @@ class Window(QWidget):
         #Timer para escuchar al SENSOR ULTRASONIDO
         self.timer_HCSR = QTimer()
         self.timer_HCSR.timeout.connect(self.sondeaSensor)
-        self.timer_HCSR.start(100)
+        self.timer_HCSR.start(100)#chequeamos la distancia cada 100ms
 
     def buttonPressed(self):
         print("Presionaste")
     def sondeaSensor(self):
         #medimos la distancia del sensor ultrasonido
         #tiempo de muestreo
-        gpio.output(Trigger,False)
-        time.sleep(0.1)
+        gpio.output(self.TRIGpin,gpio.HIGH)
+        t1=time.time()
+        #esperamos a cumplir los 10usec
+        while time.time()<t1+0.000015:
+            pass
+        gpio.output(self.TRIGpin,gpio.LOW)
+        #Esperamos el echo en HIGH
+        while not(gpio.input(self.ECHOpin)):
+            pass
+        t1=time.time()
+        #Esperamos el echo en flanco de bajada
+        while gpio.input(self.ECHOpin):
+            pass
+        runnningTime=(time.time()-t1)*1000000
+        if runnningTime<self.maxTimeEcho: 
+            #Tenemos una persona en frente!
+
+            #Procedemos a realizar el face recognition
+            1
+            
+
 
     def setupRaspberry(self):
         gpio.setmode(gpio.BCM)
