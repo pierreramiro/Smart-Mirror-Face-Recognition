@@ -1,5 +1,6 @@
 import sys
 from tkinter import Button
+from turtle import distance
 
 from click import echo
 from PyQt5.QtGui import *
@@ -44,7 +45,9 @@ class Window(QWidget):
 
     def buttonPressed(self):
         print("Presionaste")
+
     def sondeaSensor(self):
+        self.timer_HCSR.stop()
         #medimos la distancia del sensor ultrasonido
         #tiempo de muestreo
         gpio.output(self.TRIGpin,gpio.HIGH)
@@ -63,9 +66,10 @@ class Window(QWidget):
         runnningTime=(time.time()-t1)*1000000
         if runnningTime<self.maxTimeEcho: 
             #Tenemos una persona en frente!
-
+            print("distancia:",runnningTime*0.034/2)
             #Procedemos a realizar el face recognition
-            1
+        
+        self.timer_HCSR.start()
             
 
 

@@ -4,10 +4,10 @@ import RPi.GPIO as GPIO #Libreria para el manejo de pines
 import time
 
 #Configuracion de pines
-GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM)
 
-Trigger = 31 #Numero de pin de Raspberry que va conectado al Trigger del sensor
-Echo = 29 #Numero de pin de Raspberry que va conectado al Echo del sensor
+Trigger = 16 #Numero de pin de Raspberry que va conectado al Trigger del sensor
+Echo = 12 #Numero de pin de Raspberry que va conectado al Echo del sensor
 
 GPIO.setup(Trigger, GPIO.OUT)
 GPIO.setup(Echo, GPIO.IN)
