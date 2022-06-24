@@ -141,7 +141,11 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.fecha_actual="viernes, 10 de junio del 2022"
         self.hora_actual="18:00 pm"
         self.temperatura_actual="21"
-        self.ui.temperatura.setText(self.temperatura_actual)        
+        self.ui.temperatura.setText(self.temperatura_actual)   
+        #Creamos unas variables
+        self.maxDistance= 150#maxima distancia en cm
+        self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO
+             
         #Configuramos los pines del Raspberry
         self.ConfigRaspberryGPIO()
         #Bajamos el espejo
@@ -276,13 +280,13 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.setup(self.BUTTONpin,gpio.IN,pull_up_down=gpio.PUD_UP)
         
         ######## SENSOR ULTRASONIDO #######
-        #Trigger pin
-        self.TRIGpin=16
-        gpio.setup(self.TRIGpin,gpio.OUT)
-        gpio.output(self.TRIGpin,gpio.LOW)
-        #Echo pin
-        self.ECHOpin=12
-        gpio.setup(self.ECHOpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
+        ECHOpin=12
+        TRIGpin=16
+        #Configuramos como entrada
+        gpio.setup(ECHOpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
+        #Configuramos como salida
+        gpio.setup(TRIGpin,gpio.OUT)
+        gpio.output(TRIGpin,gpio.LOW)
         
     def BajarEspejo(self,altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
         #Habilitamos el driver del motor
@@ -320,6 +324,29 @@ class mirrollGUI(QtWidgets.QMainWindow):
             #ponemos un popup de BT activado
             dlg = BT_DialogBox(self)
             dlg.show()
+    
+    def sondeoSensor(self):
+        #medimos la distancia del sensor ultrasonido
+        #tiempo de muestreo
+        gpio.output(self.TRIGpin,gpio.HIGH)
+        t1=time.time()
+        #esperamos a cumplir los 10usec
+        while time.time()<t1+0.00001: #nosotros esperamos hasta 10us
+            pass
+        gpio.output(self.TRIGpin,gpio.LOW)
+        #Esperamos el echo en HIGH
+        while not(gpio.input(self.ECHOpin)):
+            #El echo tiene un timeout y se setea en baja
+            pass
+        t1=time.time()
+        #Esperamos el echo en flanco de bajada
+        while gpio.input(self.fECHOpin):
+            pass
+        runnningTime=(time.time()-t1)*1000000
+        if runnningTime<self.maxTimeEcho: 
+            #Tenemos una persona en frente!
+            print("distancia:",runnningTime*0.034/2)
+            #Procedemos a realizar el face recognition
             
 
 """ //////////////////////////////////////////
