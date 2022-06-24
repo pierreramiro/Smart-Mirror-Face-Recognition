@@ -59,7 +59,7 @@ def sondeaSensor():
     while gpio.input(ECHOpin):
         pass
     runnningTime=(time.time()-t1)*1000000
-    if runnningTime<maxTimeEcho and runnningTime<minTimeEcho: 
+    if runnningTime<maxTimeEcho and runnningTime>minTimeEcho: 
         #Tenemos una persona en frente!
         print("Persona a distancia:",runnningTime*0.034/2)
         
