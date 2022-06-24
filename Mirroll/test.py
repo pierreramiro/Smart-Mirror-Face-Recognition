@@ -8,8 +8,9 @@ from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QPushButton, QVB
 dato=1
 
 class warningBox (QDialog):
-    def __init__(self,parent=None):
+    def __init__(self,parent=None,val=0):
         super(warningBox,self).__init__(parent)
+        self.val=val
         #nombre a la ventana
         self.setWindowTitle("HELLO!")
         #Creo un layout
@@ -26,13 +27,7 @@ class warningBox (QDialog):
         self.timer.start(1000)
 
     def CloseWarning(self):
-        global dato
-        print("cerrando")
-        time.sleep(2)
-        parent=self.parent()
-        dato+=2
-        parent.dato=dato
-        print("Valor despues de crear la notificacion: ",parent.dato)
+        print("Valor despues de crear la notificacion: ",self.val)
         self.close()
     
     def closeEvent(self, event):
@@ -52,7 +47,7 @@ class MainWindow(QMainWindow):
     def button_clicked(self, s):
         print("click", s)
         print("Valor antes de cerrar la notificacion: ",self.dato)
-        dlg = warningBox(self)
+        dlg = warningBox(self,val=5)
         dlg.show()
         
 
@@ -65,17 +60,3 @@ window.show()
 app.exec()
 
 
-
-"""
-Trama como admin(usuario) 
-[funcion,id usuario,color,BINtomacorriente]
-[2,3,rojo,101]
-
-Trama como usuario básico
-[funcion,id usuario,color]
-[1,3,azul]
-
-Trama configurar rostro
-[funcion,id usuario]
-[0,1]
-"""

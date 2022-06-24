@@ -1,7 +1,4 @@
-from ctypes import alignment
-from platform import java_ver
 import sys
-from tkinter import Button
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
