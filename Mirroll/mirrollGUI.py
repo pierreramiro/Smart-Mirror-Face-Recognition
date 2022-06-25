@@ -274,6 +274,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.hora_actual="18:00 pm"
         self.temperatura_actual="21"
         self.ui.temperatura.setText(self.temperatura_actual)   
+        #Creamos unas banderas
+        self.SomeOneIsInFront=False
         #Creamos unas variables
         self.maxDistance= 150#maxima distancia en cm
         self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO
@@ -476,41 +478,49 @@ class mirrollGUI(QtWidgets.QMainWindow):
         while gpio.input(self.fECHOpin):
             pass
         runnningTime=(time.time()-t1)*1000000
-        #Verificamos los rangos
-        if runnningTime<self.maxTimeEcho and runnningTime>self.minTimeEcho: 
-            #Tenemos una persona en frente!
-            print("distancia:",runnningTime*0.034/2)
-            #Procedemos a verificar si hay rostro detectado
-            #Verificamos si hay cara en frente de la camara
-            vs = VideoStream(src=0,framerate=10).start()
-            frame=vs.read()
-            cv2.imwrite("1.jpg",frame)
-            vs.stop()
-            #Obtenemos la cara de la foto
-            face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-            gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-            faces=face_cascade.detectMultiScale(gray,1.1,4)
-            if len(faces)!=0:
-                #Hay cara!
-                boxes = face_recognition.face_locations(frame)
-                frame = imutils.resize(frame, width=500)
-                # Detect the face boxes
-                boxes = face_recognition.face_locations(frame)
-                # compute the facial embeddings for each face bounding box
-                encodings = face_recognition.face_encodings(frame, boxes)
-                #definimos una variable para hallar que usuario tuvo mas match
-                idUserMatch=[0]*10
-                #De los encodings obtenidos (rostros calculados), verificamos con los conocidos
-                for encoding in encodings:
-                    for id,dataEncs in enumerate(knownEncodings):
-                        #Calculamos la cantidad de aciertos
-                        matches=face_recognition.compare_faces(dataEncs,encoding)
-                        #Sumamos la cantidad de aciertos
-                        idUserMatch[id]+=matches.count(True) 
-                #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
-                self.IdUserToShow =idUserMatch.index(max(idUserMatch))
-                print(f"Usuario a mostrar: User{self.IdUserToShow+1}")
-            #En caso no se haya detectado cara, no hacemos ninguna configuración. Se mantiene la anterior          
+        #Verificamos en que estado estamos
+        if self.SomeOneIsInFront:
+            #Esperamos que la persona en frente se haya ido. Para ello, el sensor debe medir mayor a 150cm
+            if runnningTime>self.maxTimeEcho:
+                print("Entramos en hinbernacion")
+            #En caso la persona aún no se ha ido.. seguimos encendido mostrando la pantalla
+        else:    
+            #Verificamos los rangos para verificar si hay persona en frente
+            if runnningTime<self.maxTimeEcho and runnningTime>self.minTimeEcho: 
+                #Tenemos una persona en frente!
+                self.SomeOneIsInFront=True
+                print("distancia:",runnningTime*0.034/2)
+                #Procedemos a verificar si hay rostro detectado
+                #Verificamos si hay cara en frente de la camara
+                vs = VideoStream(src=0,framerate=10).start()
+                frame=vs.read()
+                cv2.imwrite("1.jpg",frame)
+                vs.stop()
+                #Obtenemos la cara de la foto
+                face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+                gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+                faces=face_cascade.detectMultiScale(gray,1.1,4)
+                if len(faces)!=0:
+                    #Hay cara!
+                    boxes = face_recognition.face_locations(frame)
+                    frame = imutils.resize(frame, width=500)
+                    # Detect the face boxes
+                    boxes = face_recognition.face_locations(frame)
+                    # compute the facial embeddings for each face bounding box
+                    encodings = face_recognition.face_encodings(frame, boxes)
+                    #definimos una variable para hallar que usuario tuvo mas match
+                    idUserMatch=[0]*10
+                    #De los encodings obtenidos (rostros calculados), verificamos con los conocidos
+                    for encoding in encodings:
+                        for id,dataEncs in enumerate(knownEncodings):
+                            #Calculamos la cantidad de aciertos
+                            matches=face_recognition.compare_faces(dataEncs,encoding)
+                            #Sumamos la cantidad de aciertos
+                            idUserMatch[id]+=matches.count(True) 
+                    #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
+                    self.IdUserToShow =idUserMatch.index(max(idUserMatch))
+                    print(f"Usuario a mostrar: User{self.IdUserToShow+1}")
+                #En caso no se haya detectado cara, no hacemos ninguna configuración. Se mantiene la anterior          
 
 """ //////////////////////////////////////////
     //                Main                  //
