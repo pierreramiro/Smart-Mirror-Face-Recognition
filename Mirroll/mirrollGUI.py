@@ -1,3 +1,5 @@
+import encodings
+from quopri import encode
 from MainWindow import Ui_MainWindow
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -12,7 +14,10 @@ gpio.setwarnings(False)
 
 #Libreria para face recognition
 import cv2
-
+import face_recognition
+import pickle
+from imutils.video import VideoStream
+import imutils
 
 #Variables globales
 rojo=[gpio.LOW,gpio.HIGH,gpio.LOW]
@@ -24,8 +29,13 @@ rosado=[gpio.LOW,gpio.HIGH,gpio.HIGH]
 blanco=[gpio.HIGH,gpio.HIGH,gpio.HIGH]
 colores=["rojo","verde","azul","amarillo","cian","rosado","blanco"]
 coloresGPIO=[rojo,verde,azul,amarillo,cian,rosado,blanco]
-
+#Face Recog resources
 imagenesFaceRecognition = ['RostroIzq','RostroIzqMID','RostroFrente','RostroDerMID','RostroDer','RostroArriba']
+imagenesProcessing=["Procesando1.png","Procesando2.png","Procesando3.png","Procesando4.png","Procesando5.png","Procesando6.png"]
+#foldar names dataset
+usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","user8","user9"]
+#Cargamos el archivo precargado de los faces
+knownEncodings = pickle.loads(open("encodings.pickle", "rb").read())
 
 
 """ //////////////////////////////////////////
@@ -143,15 +153,13 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.sencondLine = QtWidgets.QLabel("Coloque su rostro como muestra la imagen")   
         self.sencondLine.setStyleSheet("font: 21pt \"Arial Rounded MT Bold\";")
         self.sencondLine.setAlignment(QtCore.Qt.AlignCenter)
-
-        #agregamos un usuario
+        #Agregamos un usuario
         self.addingNewUser()
-        #not neccessary
-        self.timer_Datos=QTimer()
-        self.timer_Datos.timeout.connect(self.cambiaImagen)
-        self.timer_Datos.start(200)
+        # #not neccessary
+        # self.timer_Datos=QTimer()
+        # self.timer_Datos.timeout.connect(self.cambiaImagen)
+        # self.timer_Datos.start(200)
         
-    
     def addingNewUser(self):
         frames=[]
         for i in range(18):
@@ -196,14 +204,30 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             #Guardamos la foto para hacer procesamiento
             frames.append(frame)
         """Realizamos el procesamiento"""
-        
-
-        #Cerramos ventana
+        #De los frames guardados, hacemos el procesamiento        
+        for i,frame in enumerate(frames):
+            #Lo pasamos a rgb
+            rgb=cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            #detectamos los rostros boxes
+            boxes = face_recognition.face_locations(rgb,model="hog") #Se escoge el modelo hog
+            #obtenemos los encodings
+            encodings = face_recognition.face_encodings(rgb, boxes)
+            # loop over the encodings
+            tempEncodings=[]
+            for encoding in encodings:
+                # add each encoding + name to our set of known names and
+                # encodings
+                tempEncodings.append(encoding)
+            #Reemplazamos por los datos que ya teníamos
+            knownEncodings[self.idUser]=tempEncodings
+            #Añadimos ventana de processing
+            image=QImage('resources/'+imagenesProcessing[i%6]+'.png')
+            self.imageLabel.setPixmap(QPixmap.fromImage(image))
+            self.setLayout(self.layout)    
+        #Cerramos ventana luego de realizar el procesamiento
         self.close()
 
-    def cambiaImagen(self):
-
-        
+    def cambiaImagen(self):#Ya no se usa
         self.j=self.j+1
         if self.i<0 and (self.j%15==0):
             self.sencondLine.setStyleSheet("font: 21pt \"Arial Rounded MT Bold\";")
@@ -225,13 +249,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
             self.setLayout(self.layout)
     
-    def takePic(fileName):
-        cam=cv2.VideoCapture(0)
-        ret,frame=cam.read()
-        cv2.imwrite(fileName,frame)
-        cam.release()
-    
-    def closeEvent(self, event):
+    def closeEvent(self, event):#Ya no se usa
         self.timer.stop()
         event.accept()
 
@@ -259,7 +277,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Creamos unas variables
         self.maxDistance= 150#maxima distancia en cm
         self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO
-             
+        self.minDistance= 70#maxima distancia en cm
+        self.minTimeEcho= self.minDistance*2/0.034
         #Configuramos los pines del Raspberry
         self.ConfigRaspberryGPIO()
         #Bajamos el espejo
@@ -457,11 +476,41 @@ class mirrollGUI(QtWidgets.QMainWindow):
         while gpio.input(self.fECHOpin):
             pass
         runnningTime=(time.time()-t1)*1000000
-        if runnningTime<self.maxTimeEcho: 
+        #Verificamos los rangos
+        if runnningTime<self.maxTimeEcho and runnningTime>self.minTimeEcho: 
             #Tenemos una persona en frente!
             print("distancia:",runnningTime*0.034/2)
-            #Procedemos a realizar el face recognition
-            
+            #Procedemos a verificar si hay rostro detectado
+            #Verificamos si hay cara en frente de la camara
+            vs = VideoStream(src=0,framerate=10).start()
+            frame=vs.read()
+            cv2.imwrite("1.jpg",frame)
+            vs.stop()
+            #Obtenemos la cara de la foto
+            face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+            gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+            faces=face_cascade.detectMultiScale(gray,1.1,4)
+            if len(faces)!=0:
+                #Hay cara!
+                boxes = face_recognition.face_locations(frame)
+                frame = imutils.resize(frame, width=500)
+                # Detect the face boxes
+                boxes = face_recognition.face_locations(frame)
+                # compute the facial embeddings for each face bounding box
+                encodings = face_recognition.face_encodings(frame, boxes)
+                #definimos una variable para hallar que usuario tuvo mas match
+                idUserMatch=[0]*10
+                #De los encodings obtenidos (rostros calculados), verificamos con los conocidos
+                for encoding in encodings:
+                    for id,dataEncs in enumerate(knownEncodings):
+                        #Calculamos la cantidad de aciertos
+                        matches=face_recognition.compare_faces(dataEncs,encoding)
+                        #Sumamos la cantidad de aciertos
+                        idUserMatch[id]+=matches.count(True) 
+                #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
+                self.IdUserToShow =idUserMatch.index(max(idUserMatch))
+                print(f"Usuario a mostrar: User{self.IdUserToShow+1}")
+            #En caso no se haya detectado cara, no hacemos ninguna configuración. Se mantiene la anterior          
 
 """ //////////////////////////////////////////
     //                Main                  //
