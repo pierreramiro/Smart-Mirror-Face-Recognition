@@ -132,8 +132,11 @@ class BT_DialogBox (QtWidgets.QDialog):
         event.accept()
 
 class configureUser_DialogBox (QtWidgets.QDialog):
-    def __init__(self,idUser=0):
-        super(configureUser_DialogBox,self).__init__(idUser)
+    def __init__(self,parent=None,idUser=0):
+        super(configureUser_DialogBox,self).__init__(parent)
+        self.parent=parent
+        #añadimos flag
+        self.parent.AddingNewUser=True
         #Ponemos un nombre a la ventana3
         self.setWindowTitle("Reconocimiento Facial")
         self.setWindowIcon(QtGui.QIcon('resources/RFLogo.png'))
@@ -141,34 +144,79 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         #creo el layout de nuestra ventana (vertical)
         self.layout=QtWidgets.QVBoxLayout()
         #Creo el texto a mostrar
-        message = QtWidgets.QLabel("Acérquese a la cámara")
-        message.setStyleSheet("font: 16pt \"Arial Rounded MT Bold\";")
-        message.setAlignment(QtCore.Qt.AlignCenter)
-        self.layout.addWidget(message)
+        self.message = QtWidgets.QLabel("Acérquese a la cámara")
+        self.message.setStyleSheet("font: 16pt \"Arial Rounded MT Bold\";")
+        self.message.setAlignment(QtCore.Qt.AlignCenter)
+        self.layout.addWidget(self.message)
         self.layout.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
         self.setLayout(self.layout)
         #seteando variables
         self.idUser=idUser
+        self.frames=[]
+        self.countPics=0
+        self.picTaken=False
+        self.ponerNuevaPose=True
+        self.maxNumbersPics=6
         #Creamos unos widgets
         self.imageLabel = QtWidgets.QLabel()
         self.sencondLine = QtWidgets.QLabel("Coloque su rostro como muestra la imagen")   
         self.sencondLine.setStyleSheet("font: 21pt \"Arial Rounded MT Bold\";")
         self.sencondLine.setAlignment(QtCore.Qt.AlignCenter)
-        #Agregamos un usuario
-        QTimer.singleShot(0,self.addingNewUser)
-        # #not neccessary
-        # self.timer_Datos=QTimer()
-        # self.timer_Datos.timeout.connect(self.cambiaImagen)
-        # self.timer_Datos.start(200)
+        #Configuramos los timers
+        self.timer_one=QTimer()
+        self.timer_one.timeout.connect(self.takePicsNewUser)
+        self.timer_two=QTimer()
+        self.timer_two.timeout.connect(self.processPicsNewUser)
+        #Iniciamos los timer
+        self.timer_one.start(800)
         
-    def addingNewUser(self):
-        frames=[]
-        for i in range(18):
+        
+    def takePicsNewUser(self):
+        if self.countPics==self.maxNumbersPics:
+            #Detenenmos este timer
+            self.timer_one.stop()
+            #resetamos esta variable para el sgte timer
+            self.countPics=0
+            #Inicializamos el evento de processing
+            self.timer_two.start(800)
+        if self.picTaken:
+            #Colocamos la actualizacion de imágenes
+            if self.countPics!=0:
+                if not(self.ponerNuevaPose):
+                    #Pedimos al usuario una nueva pose
+                    time.sleep(0.5)
+                    image=QImage('resources/'+imagenesFaceRecognition[self.countPics%6]+'.png')
+                    self.imageLabel.setPixmap(QPixmap.fromImage(image))
+                    self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
+                    self.setLayout(self.layout)
+                    self.ponerNuevaPose=True
+                    #Seteamos los flags, pedimos una foto nueva y ya tenemos foto guardada
+                    self.picTaken=False
+                    self.countPics+=1
+                else:
+                    #Efecto de que se tomo una foto
+                    image=QImage('resources/CamP.png')
+                    self.imageLabel.setPixmap(QPixmap.fromImage(image))
+                    self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
+                    self.setLayout(self.layout)#añadimos la imagen
+                    self.ponerNuevaPose=False
+            else:
+                #Esta es la primera vez
+                image=QImage('resources/'+imagenesFaceRecognition[self.countPics%6]+'.png')
+                self.imageLabel.setPixmap(QPixmap.fromImage(image))
+                self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
+                self.layout.addWidget(self.sencondLine)
+                self.layout.addWidget(self.imageLabel)
+                self.setLayout(self.layout)
+                self.show()
+                self.picTaken=False
+                self.countPics+=1
+        else:
             faces=[]
             #Verificamos si hay cara en frente de la camara
-            while len(faces)==0:
-                #añadimos un delay
-                time.sleep(0.1)
+            while len(faces)==0 and not(self.picTaken):
+                # #añadimos un delay
+                # time.sleep(0.1)
                 #Tomamos una foto
                 cam=cv2.VideoCapture(0)
                 ret,frame=cam.read()
@@ -178,55 +226,45 @@ class configureUser_DialogBox (QtWidgets.QDialog):
                 face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
                 gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
                 faces=face_cascade.detectMultiScale(gray,1.1,4)
-            
-            if i!=0:
-                #Se detecto una cara y Actualizamos el Dialog y colocamos el iconPhoto
-                image=QImage('resources/CamP.png')
-                self.imageLabel.setPixmap(QPixmap.fromImage(image))
-                self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
-                self.setLayout(self.layout)
-                time.sleep(0.2)
-                image=QImage('resources/'+imagenesFaceRecognition[i%6]+'.png')
-                self.imageLabel.setPixmap(QPixmap.fromImage(image))
-                self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
-                self.setLayout(self.layout)
-                #forzamos un delay
-                time.sleep(1.5)
-            else:
-                #Esta es la primera vez
-                self.layout.addWidget(self.sencondLine)
-                image=QImage('resources/'+imagenesFaceRecognition[i%6]+'.png')
-                self.imageLabel.setPixmap(QPixmap.fromImage(image))
-                self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
-                self.setLayout(self.layout)
-                self.layout.addWidget(self.imageLabel)
-                #forzamos un delay
-                time.sleep(1.5)
+            self.picTaken=True
+            print("foto: ",self.countPics)
             #Guardamos la foto para hacer procesamiento
-            frames.append(frame)
+            self.frames.append(frame)
+        
+    def processPicsNewUser(self):
+        if self.countPics==self.maxNumbersPics:
+            #desahibiltamos el timer
+            self.timer_two.stop()
+            #Guardamos el nuevo pickle
+            f = open("encodings.pickle", "wb")
+            f.write(pickle.dumps(knownEncodings))
+            f.close()
+            #Cerramos la ventana
+            self.close()
         """Realizamos el procesamiento"""
-        #De los frames guardados, hacemos el procesamiento        
-        for i,frame in enumerate(frames):
-            #Lo pasamos a rgb
-            rgb=cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            #detectamos los rostros boxes
-            boxes = face_recognition.face_locations(rgb,model="hog") #Se escoge el modelo hog
-            #obtenemos los encodings
-            encodings = face_recognition.face_encodings(rgb, boxes)
-            # loop over the encodings
-            tempEncodings=[]
-            for encoding in encodings:
-                # add each encoding + name to our set of known names and
-                # encodings
-                tempEncodings.append(encoding)
-            #Reemplazamos por los datos que ya teníamos
-            knownEncodings[self.idUser]=tempEncodings
-            #Añadimos ventana de processing
-            image=QImage('resources/'+imagenesProcessing[i%6]+'.png')
-            self.imageLabel.setPixmap(QPixmap.fromImage(image))
-            self.setLayout(self.layout)    
-        #Cerramos ventana luego de realizar el procesamiento
-        self.close()
+        frame=self.frames[self.countPics]
+        #Lo pasamos a rgb
+        rgb=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #Guardamos la imagen
+        cv2.imwrite("dataset/User"+str(self.idUser)+"/image"+str(self.countPics)+".png",frame)
+        #detectamos los rostros boxes
+        boxes = face_recognition.face_locations(rgb,model="hog") #Se escoge el modelo hog
+        #obtenemos los encodings
+        encodings = face_recognition.face_encodings(rgb, boxes)
+        # loop over the encodings
+        tempEncodings=[]
+        for encoding in encodings:
+            # add each encoding + name to our set of known names and
+            # encodings
+            tempEncodings.append(encoding)
+        #Reemplazamos por los datos que ya teníamos
+        knownEncodings[self.idUser]=tempEncodings
+        #Añadimos ventana de processing
+        image=QImage('resources/'+imagenesProcessing[self.countPics%6])
+        self.imageLabel.setPixmap(QPixmap.fromImage(image))
+        self.setLayout(self.layout)    
+        #aumentamos el contador
+        self.countPics+=1
 
     def cambiaImagen(self):#Ya no se usa
         self.j=self.j+1
@@ -251,7 +289,6 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             self.setLayout(self.layout)
     
     def closeEvent(self, event):#Ya no se usa
-        self.timer.stop()
         event.accept()
 
 class mirrollGUI(QtWidgets.QMainWindow):
