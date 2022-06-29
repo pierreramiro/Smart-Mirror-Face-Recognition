@@ -3,7 +3,7 @@
 import RPi.GPIO as gpio
 import time
 
-def BajarEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
+def SubirEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
     #Habilitamos el driver del motor
     gpio.output(ENApin,gpio.LOW)
     #Definimos la dirección
@@ -31,11 +31,11 @@ def BajarEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
     gpio.output(ENApin,gpio.HIGH)
 
 
-def SubirEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
+def BajarEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
     #Habilitamos el driver del motor
     gpio.output(ENApin,gpio.LOW)
     #Definimos la dirección
-    gpio.output(DIRpin,gpio.HIGH)
+    gpio.output(DIRpin,gpio.LOW)
     if altura==-1:
         #Bajamos el espejo hasta sentir el limit switch
         while gpio.input(LSDOWNpin)!=0:
@@ -87,4 +87,5 @@ if __name__=="__main__":
         #gpio.output(ENApin,gpio.HIGH)
         #gpio.output(DIRpin,gpio.LOW)
         #gpio.output(PULpin,gpio.HIGH)
-        BajarEspejo()
+        SubirEspejo()
+        #SubirEspejo()

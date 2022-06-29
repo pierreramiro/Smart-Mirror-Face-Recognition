@@ -406,6 +406,33 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Habilitamos el driver del motor
         gpio.output(self.ENApin,gpio.LOW)
         #Definimos la dirección
+        gpio.output(self.DIRpin,gpio.LOW)
+        if altura==-1:
+            #Bajamos el espejo hasta sentir el limit switch
+            while gpio.input(self.LSDOWNpin)!=0:
+                #Ponemos en HIGH
+                gpio.output(self.PULpin,gpio.HIGH)        
+                #Esperamos en HIGH
+                initTime=time.time_ns()
+                while time.time_ns()-initTime<STEPTIME:
+                    pass
+
+                #Ponemos en LOW
+                gpio.output(self.PULpin,gpio.LOW)        
+                #Esperamos en LOW
+                initTime=time.time_ns()
+                while time.time_ns()-initTime<STEPTIME:
+                    pass
+        else:
+            #Bajamos una cierta altura
+            """Es similar al anterior, solo que en vez de un while para checar el limit, se le añade la distanciaa estimada por calculo del factor de pulsos/m"""
+        #Deshabilitamos el driver del motor
+        gpio.output(self.ENApin,gpio.HIGH)
+    
+    def SubirEspejo(self,altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
+        #Habilitamos el driver del motor
+        gpio.output(self.ENApin,gpio.LOW)
+        #Definimos la dirección
         gpio.output(self.DIRpin,gpio.HIGH)
         if altura==-1:
             #Bajamos el espejo hasta sentir el limit switch
