@@ -110,17 +110,29 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.countPics=0
         self.picTaken=False
         self.ponerNuevaPose=True
+        self.maxNumbersPics=6
         #Creamos unos widgets
         self.imageLabel = QtWidgets.QLabel()
         self.sencondLine = QtWidgets.QLabel("Coloque su rostro como muestra la imagen")   
         self.sencondLine.setStyleSheet("font: 21pt \"Arial Rounded MT Bold\";")
         self.sencondLine.setAlignment(QtCore.Qt.AlignCenter)
-        #Agregamos un usuario
-        self.timer_AddFR=QTimer()
-        self.timer_AddFR.timeout.connect(self.addingNewUser)
-        self.timer_AddFR.start(800)
+        #Configuramos los timers
+        self.timer_one=QTimer()
+        self.timer_one.timeout.connect(self.takePicsNewUser)
+        self.timer_two=QTimer()
+        self.timer_two.timeout.connect(self.processPicsNewUser)
+        #Iniciamos los timer
+        self.timer_one.start(800)
         
-    def addingNewUser(self):
+        
+    def takePicsNewUser(self):
+        if self.countPics==self.maxNumbersPics:
+            #Detenenmos este timer
+            self.timer_one.stop()
+            #resetamos esta variable para el sgte timer
+            self.countPics=0
+            #Inicializamos el evento de processing
+            self.timer_two.start(800)
         if self.picTaken:
             #Colocamos la actualizacion de imágenes
             if self.countPics!=0:
@@ -173,30 +185,40 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             #Guardamos la foto para hacer procesamiento
             self.frames.append(frame)
         
-    def Processing (self):
+    def processPicsNewUser(self):
+        if self.countPics==self.maxNumbersPics:
+            #desahibiltamos el timer
+            self.timer_two.stop()
+            #Guardamos el nuevo pickle
+            f = open("encodings.pickle", "wb")
+            f.write(pickle.dumps(knownEncodings))
+            f.close()
+            #Cerramos la ventana
+            self.close()
         """Realizamos el procesamiento"""
-        #De los frames guardados, hacemos el procesamiento        
-        for i,frame in enumerate(self.frames):
-            #Lo pasamos a rgb
-            rgb=cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            #detectamos los rostros boxes
-            boxes = face_recognition.face_locations(rgb,model="hog") #Se escoge el modelo hog
-            #obtenemos los encodings
-            encodings = face_recognition.face_encodings(rgb, boxes)
-            # loop over the encodings
-            tempEncodings=[]
-            for encoding in encodings:
-                # add each encoding + name to our set of known names and
-                # encodings
-                tempEncodings.append(encoding)
-            #Reemplazamos por los datos que ya teníamos
-            knownEncodings[self.idUser]=tempEncodings
-            #Añadimos ventana de processing
-            image=QImage('resources/'+imagenesProcessing[i%6]+'.png')
-            self.imageLabel.setPixmap(QPixmap.fromImage(image))
-            self.setLayout(self.layout)    
-        #Cerramos ventana luego de realizar el procesamiento
-        self.close()
+        frame=self.frames[self.countPics]
+        #Lo pasamos a rgb
+        rgb=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #Guardamos la imagen
+        cv2.imwrite("dataset/User"+str(self.idUser)+"/image"+str(self.countPics)+".png",frame)
+        #detectamos los rostros boxes
+        boxes = face_recognition.face_locations(rgb,model="hog") #Se escoge el modelo hog
+        #obtenemos los encodings
+        encodings = face_recognition.face_encodings(rgb, boxes)
+        # loop over the encodings
+        tempEncodings=[]
+        for encoding in encodings:
+            # add each encoding + name to our set of known names and
+            # encodings
+            tempEncodings.append(encoding)
+        #Reemplazamos por los datos que ya teníamos
+        knownEncodings[self.idUser]=tempEncodings
+        #Añadimos ventana de processing
+        image=QImage('resources/'+imagenesProcessing[self.countPics%6])
+        self.imageLabel.setPixmap(QPixmap.fromImage(image))
+        self.setLayout(self.layout)    
+        #aumentamos el contador
+        self.countPics+=1
 
     def cambiaImagen(self):#Ya no se usa
         self.j=self.j+1
@@ -221,7 +243,6 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             self.setLayout(self.layout)
     
     def closeEvent(self, event):#Ya no se usa
-        self.timer.stop()
         event.accept()
 
 class mirrollGUI(QtWidgets.QMainWindow):

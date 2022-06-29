@@ -41,7 +41,7 @@ gpio.output(21,gpio.HIGH)
 
 while True:
     #main
-    color="rojo"
+    color="rosado"
     #ponemos color
     idColor=colores.index(color)
     gpio.output(LREDpin,coloresGPIO[idColor][0])
