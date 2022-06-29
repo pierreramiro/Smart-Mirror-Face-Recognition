@@ -19,5 +19,6 @@ while True:
     sleep(0.03)
     data_left = ser.inWaiting()             #check for remaining byte
     received_data += ser.read(data_left)
+    received_data=eval(received_data.decode())
     print (received_data)                   #print received data
-    ser.write(received_data)                #transmit data serially 
+    #ser.write(received_data)                #transmit data serially 

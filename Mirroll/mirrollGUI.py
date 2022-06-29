@@ -45,6 +45,7 @@ knownEncodings = pickle.loads(open("encodings.pickle", "rb").read())
 class BT_DialogBox (QtWidgets.QDialog):
     def __init__(self,parent=None):
         super(BT_DialogBox,self).__init__(parent)
+        self.parent=parent
         #Ponemos un nombre a la ventana
         self.setWindowTitle("Notificación")
         #creo el layout de nuestra ventana (vertical)
@@ -84,7 +85,8 @@ class BT_DialogBox (QtWidgets.QDialog):
                 """Trama de configurar rostro"""
                 print("Al usuario: ",received_data[1],"Le modificaremos su rostro")
                 #ponemos un popup de BT activado
-                dlg = configureUser_DialogBox(self,idUser=received_data[1]-1) #Le restamos porque en la app están del 1 al 10
+                temp=received_data[1]-1
+                dlg = configureUser_DialogBox(temp) #Le restamos porque en la app están del 1 al 10
                 dlg.show()
 
             elif received_data[0]==1:
@@ -132,7 +134,7 @@ class BT_DialogBox (QtWidgets.QDialog):
 
 class configureUser_DialogBox (QtWidgets.QDialog):
     def __init__(self,idUser=0):
-        super().__init__()
+        super(configureUser_DialogBox,self).__init__(idUser)
         #Ponemos un nombre a la ventana3
         self.setWindowTitle("Reconocimiento Facial")
         self.setWindowIcon(QtGui.QIcon('resources/RFLogo.png'))
