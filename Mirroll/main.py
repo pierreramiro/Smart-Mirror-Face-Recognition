@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
-import mirrollGUI
+import Windows2
 
 if __name__ == "__main__":
-    mirrollGUI.setUpMirrollGUI()
+    Windows2.setUpMirrollGUI()
+    #mirrollGUI.setUpMirrollGUI()

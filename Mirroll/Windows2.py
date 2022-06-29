@@ -68,72 +68,29 @@ class BT_DialogBox (QtWidgets.QDialog):
         self.timer_Datos.start(300)
 
     def sondeaDatos(self):
-        #recibir data:   [funcion,idUser,color,BINtomacorrientes,altura]
-        received_data = self.ser.read()              #read serial port
-        time.sleep(0.03)
-        data_left = self.ser.inWaiting()             #check for remaining byte
-        received_data += self.ser.read(data_left)
-        if len(received_data)!=0:
+        if not(gpio.input(self.parent.LSDOWNpin)):
             #Desactivamos sondeo, porque hemos recibido información. Lo activamos nuevamente al final
             #Esto lo hacemos para asegurar los tiempos entre timeouts
             self.timer_Datos.stop()
-            #Decodificamos data
-            print(received_data)
-            received_data=eval(received_data.decode())
-            #Con el primer elemento podemos revisar que función aplicamos
-            if received_data[0]==0:
-                """Trama de configurar rostro"""
-                print("Al usuario: ",received_data[1],"Le modificaremos su rostro")
-                #ponemos un popup de BT activado
-                temp=received_data[1]-1
-                dlg = configureUser_DialogBox(self.parent,temp) #Le restamos porque en la app están del 1 al 10
-                dlg.show()
-            elif received_data[0]==1:
-                """Trama como usuario básico"""
-                idUser=received_data[1]-1
-                color=received_data[2]
-                print("El usuario: ",idUser,"tiene color: ", color)
-                parent=self.parent()
-                #obtengo el usuario que se va a mostrar
-                parent.IdUserToShow=idUser
-                #Obtengo el Id del color a modificar
-                parent.perfiles[idUser]=colores.index(color)
-
-            elif received_data[0]==2:
-                """Trama como admin"""
-                idUser=received_data[1]-1
-                color=received_data[2]
-                BINtomacorrientes=str(received_data[3])
-                altura=received_data[4]
-                print("El usuario: ",idUser,"tiene color: ", color,"se activan:",BINtomacorrientes,"y altura:",altura)
-                parent=self.parent()
-                #obtengo el usuario que se va a mostrar
-                parent.IdUserToShow=idUser
-                #Obtengo el Id del color a modificar
-                parent.perfiles[idUser][0]=altura
-                parent.perfiles[idUser][1]=colores.index(color)
-                parent.perfiles[idUser][2]=BINtomacorrientes
-
-            elif received_data[0]==3:
-                parent=self.parent()
-                #activamos nuevamente el sondeo
-                parent.waitingBT=1
-                parent.timer_BT.start(5)
-                #Cerramos aplicacion
-                self.close()
-            else:
-                print("función no creada")
-            #ACtivamos sondeo, que habiamos desactivado al inicio
-            self.timer_Datos.start()
+            """Trama de configurar rostro"""
+            print("Al usuario: None Le modificaremos su rostro")
+            #ponemos un popup de BT activado
+            temp=1
+            dlg = configureUser_DialogBox(self.parent,temp) #Le restamos porque en la app están del 1 al 10
+            dlg.show()
             
     #Esta función por si sola nos permite aceptar el evento de cierre (not modified)
     def closeEvent(self, event):
         self.timer_Datos.stop()
+        self.timer_BT.stop()
         event.accept()
 
 class configureUser_DialogBox (QtWidgets.QDialog):
-    def __init__(self,idUser=0):
-        super(configureUser_DialogBox,self).__init__(idUser)
+    def __init__(self,parent=None,idUser=0):
+        super(configureUser_DialogBox,self).__init__(parent)
+        self.parent=parent
+        #añadimos flag
+        self.parent.AddingNewUser=True
         #Ponemos un nombre a la ventana3
         self.setWindowTitle("Reconocimiento Facial")
         self.setWindowIcon(QtGui.QIcon('resources/RFLogo.png'))
@@ -141,34 +98,67 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         #creo el layout de nuestra ventana (vertical)
         self.layout=QtWidgets.QVBoxLayout()
         #Creo el texto a mostrar
-        message = QtWidgets.QLabel("Acérquese a la cámara")
-        message.setStyleSheet("font: 16pt \"Arial Rounded MT Bold\";")
-        message.setAlignment(QtCore.Qt.AlignCenter)
-        self.layout.addWidget(message)
+        self.message = QtWidgets.QLabel("Acérquese a la cámara")
+        self.message.setStyleSheet("font: 16pt \"Arial Rounded MT Bold\";")
+        self.message.setAlignment(QtCore.Qt.AlignCenter)
+        self.layout.addWidget(self.message)
         self.layout.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
         self.setLayout(self.layout)
         #seteando variables
         self.idUser=idUser
+        self.frames=[]
+        self.countPics=0
+        self.picTaken=False
+        self.ponerNuevaPose=True
         #Creamos unos widgets
         self.imageLabel = QtWidgets.QLabel()
         self.sencondLine = QtWidgets.QLabel("Coloque su rostro como muestra la imagen")   
         self.sencondLine.setStyleSheet("font: 21pt \"Arial Rounded MT Bold\";")
         self.sencondLine.setAlignment(QtCore.Qt.AlignCenter)
         #Agregamos un usuario
-        QTimer.singleShot(0,self.addingNewUser)
-        # #not neccessary
-        # self.timer_Datos=QTimer()
-        # self.timer_Datos.timeout.connect(self.cambiaImagen)
-        # self.timer_Datos.start(200)
+        self.timer_AddFR=QTimer()
+        self.timer_AddFR.timeout.connect(self.addingNewUser)
+        self.timer_AddFR.start(800)
         
     def addingNewUser(self):
-        frames=[]
-        for i in range(18):
+        if self.picTaken:
+            #Colocamos la actualizacion de imágenes
+            if self.countPics!=0:
+                if not(self.ponerNuevaPose):
+                    #Pedimos al usuario una nueva pose
+                    time.sleep(0.5)
+                    image=QImage('resources/'+imagenesFaceRecognition[self.countPics%6]+'.png')
+                    self.imageLabel.setPixmap(QPixmap.fromImage(image))
+                    self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
+                    self.setLayout(self.layout)
+                    self.ponerNuevaPose=True
+                    #Seteamos los flags, pedimos una foto nueva y ya tenemos foto guardada
+                    self.picTaken=False
+                    self.countPics+=1
+                else:
+                    #Efecto de que se tomo una foto
+                    image=QImage('resources/CamP.png')
+                    self.imageLabel.setPixmap(QPixmap.fromImage(image))
+                    self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
+                    self.setLayout(self.layout)#añadimos la imagen
+                    self.ponerNuevaPose=False
+            else:
+                #Esta es la primera vez
+                image=QImage('resources/'+imagenesFaceRecognition[self.countPics%6]+'.png')
+                self.imageLabel.setPixmap(QPixmap.fromImage(image))
+                self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
+                self.layout.addWidget(self.sencondLine)
+                self.layout.addWidget(self.imageLabel)
+                self.setLayout(self.layout)
+                self.show()
+                self.picTaken=False
+                self.countPics+=1
+        else:
             faces=[]
             #Verificamos si hay cara en frente de la camara
-            while len(faces)==0:
-                #añadimos un delay
-                time.sleep(0.1)
+            while len(faces)==0 and not(self.picTaken):
+                # #añadimos un delay
+                # time.sleep(0.1)
                 #Tomamos una foto
                 cam=cv2.VideoCapture(0)
                 ret,frame=cam.read()
@@ -178,35 +168,15 @@ class configureUser_DialogBox (QtWidgets.QDialog):
                 face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
                 gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
                 faces=face_cascade.detectMultiScale(gray,1.1,4)
-            
-            if i!=0:
-                #Se detecto una cara y Actualizamos el Dialog y colocamos el iconPhoto
-                image=QImage('resources/CamP.png')
-                self.imageLabel.setPixmap(QPixmap.fromImage(image))
-                self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
-                self.setLayout(self.layout)
-                time.sleep(0.2)
-                image=QImage('resources/'+imagenesFaceRecognition[i%6]+'.png')
-                self.imageLabel.setPixmap(QPixmap.fromImage(image))
-                self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
-                self.setLayout(self.layout)
-                #forzamos un delay
-                time.sleep(1.5)
-            else:
-                #Esta es la primera vez
-                self.layout.addWidget(self.sencondLine)
-                image=QImage('resources/'+imagenesFaceRecognition[i%6]+'.png')
-                self.imageLabel.setPixmap(QPixmap.fromImage(image))
-                self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
-                self.setLayout(self.layout)
-                self.layout.addWidget(self.imageLabel)
-                #forzamos un delay
-                time.sleep(1.5)
+            self.picTaken=True
+            print("foto: ",self.countPics)
             #Guardamos la foto para hacer procesamiento
-            frames.append(frame)
+            self.frames.append(frame)
+        
+    def Processing (self):
         """Realizamos el procesamiento"""
         #De los frames guardados, hacemos el procesamiento        
-        for i,frame in enumerate(frames):
+        for i,frame in enumerate(self.frames):
             #Lo pasamos a rgb
             rgb=cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             #detectamos los rostros boxes
@@ -277,6 +247,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.ui.temperatura.setText(self.temperatura_actual)   
         #Creamos unas banderas
         self.SomeOneIsInFront=False
+        self.AddingNewUser=False
         #Creamos unas variables
         self.maxDistance= 60#maxima distancia en cm
         self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO
@@ -285,7 +256,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Configuramos los pines del Raspberry
         self.ConfigRaspberryGPIO()
         #Bajamos el espejo
-        self.BajarEspejo()
+        #self.BajarEspejo()
         #Habilitamos para esperar conexion BT
         self.waitingBT=1
         """Creamos distintos timer que realizarán un sondeo (Poll) y actualizarán datos"""
@@ -303,7 +274,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Timer para escuchar al SENSOR ULTRASONIDO
         self.timer_HCSR = QTimer(self)
         self.timer_HCSR.timeout.connect(self.sondeoSensor)
-        self.timer_HCSR.start(1000)
+        #self.timer_HCSR.start(1000)
 
 
     """##################################"""
