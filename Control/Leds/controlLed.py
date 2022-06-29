@@ -7,10 +7,10 @@ LREDpin=18 #
 LGREENpin=23 
 LBLUEpin=24
 #MOTOR
-LREDpin=17
-LGREENpin=27
-LBLUEpin=22
-#RELAYS
+# LREDpin=17
+# LGREENpin=27
+# LBLUEpin=22
+#RELAYS0
 # LREDpin=10
 # LGREENpin=9
 # LBLUEpin=11
@@ -41,7 +41,7 @@ gpio.output(21,gpio.HIGH)
 
 while True:
     #main
-    color="amarillo"
+    color="rojo"
     #ponemos color
     idColor=colores.index(color)
     gpio.output(LREDpin,coloresGPIO[idColor][0])

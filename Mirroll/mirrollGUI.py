@@ -262,7 +262,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Definimos 10 perfiles por defecto
         temp=[]
         for i in range(10):
-            temp.append([0,1,"111"]) # guardamos los datos de los perfiles [altura,idColor,binData]
+            temp.append([0,4,"111"]) # guardamos los datos de los perfiles [altura,idColor,binData]
         self.perfiles=temp
         #Indicamos el usuario a mostrar su personalización
         self.IdUserToShow=0
@@ -277,9 +277,9 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Creamos unas banderas
         self.SomeOneIsInFront=False
         #Creamos unas variables
-        self.maxDistance= 150#maxima distancia en cm
+        self.maxDistance= 60#maxima distancia en cm
         self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO
-        self.minDistance= 70#maxima distancia en cm
+        self.minDistance= 30#maxima distancia en cm
         self.minTimeEcho= self.minDistance*2/0.034
         #Configuramos los pines del Raspberry
         self.ConfigRaspberryGPIO()
@@ -301,7 +301,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         
         #Timer para escuchar al SENSOR ULTRASONIDO
         self.timer_HCSR = QTimer(self)
-
+        self.timer_HCSR.timeout.connect(self.sondeoSensor)
+        self.timer_HCSR.start(1000)
 
 
     """##################################"""
@@ -415,13 +416,13 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.setup(self.BUTTONpin,gpio.IN,pull_up_down=gpio.PUD_UP)
         
         ######## SENSOR ULTRASONIDO #######
-        ECHOpin=12
-        TRIGpin=16
+        self.ECHOpin=12
+        self.TRIGpin=16
         #Configuramos como entrada
-        gpio.setup(ECHOpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
+        gpio.setup(self.ECHOpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
         #Configuramos como salida
-        gpio.setup(TRIGpin,gpio.OUT)
-        gpio.output(TRIGpin,gpio.LOW)
+        gpio.setup(self.TRIGpin,gpio.OUT)
+        gpio.output(self.TRIGpin,gpio.LOW)
         
     def BajarEspejo(self,altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
         #Habilitamos el driver del motor
@@ -502,14 +503,30 @@ class mirrollGUI(QtWidgets.QMainWindow):
             pass
         t1=time.time()
         #Esperamos el echo en flanco de bajada
-        while gpio.input(self.fECHOpin):
+        while gpio.input(self.ECHOpin):
             pass
         runnningTime=(time.time()-t1)*1000000
         #Verificamos en que estado estamos
         if self.SomeOneIsInFront:
             #Esperamos que la persona en frente se haya ido. Para ello, el sensor debe medir mayor a 150cm
-            if runnningTime>self.maxTimeEcho:
+            time.sleep(0.5)
+            t1=time.time()
+            #esperamos a cumplir los 10usec
+            while time.time()<t1+0.00001: #nosotros esperamos hasta 10us
+                pass
+            gpio.output(self.TRIGpin,gpio.LOW)
+            #Esperamos el echo en HIGH
+            while not(gpio.input(self.ECHOpin)):
+                #El echo tiene un timeout y se setea en baja
+                pass
+            t1=time.time()
+            #Esperamos el echo en flanco de bajada
+            while gpio.input(self.ECHOpin):
+                pass
+            runnningTime=(time.time()-t1)*1000000
+            if runnningTime>self.maxTimeEcho or runnningTime<self.minTimeEcho:
                 print("Entramos en hinbernacion")
+                self.SomeOneIsInFront=False
             #En caso la persona aún no se ha ido.. seguimos encendido mostrando la pantalla
         else:    
             #Verificamos los rangos para verificar si hay persona en frente
@@ -548,7 +565,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     self.IdUserToShow =idUserMatch.index(max(idUserMatch))
                     print(f"Usuario a mostrar: User{self.IdUserToShow+1}")
                 #En caso no se haya detectado cara, no hacemos ninguna configuración. Se mantiene la anterior          
-
+            
 """ //////////////////////////////////////////
     //                Main                  //
     //////////////////////////////////////////

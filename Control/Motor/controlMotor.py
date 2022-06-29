@@ -87,5 +87,5 @@ if __name__=="__main__":
         #gpio.output(ENApin,gpio.HIGH)
         #gpio.output(DIRpin,gpio.LOW)
         #gpio.output(PULpin,gpio.HIGH)
+        #BajarEspejo()
         SubirEspejo()
-        #SubirEspejo()

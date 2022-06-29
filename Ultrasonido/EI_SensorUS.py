@@ -28,7 +28,7 @@ while True:
     #para definir el instante en el que se envio y que se recibe
     while GPIO.input(Echo)==0:
     #   inicio=time.time()
-        print("")
+        pass#print("")
 
     while GPIO.input(Echo) == 1:
         final = time.time()
@@ -39,8 +39,10 @@ while True:
     distancia=tiempo_transcurrido*34000 #para hallar la distancia total recorrida por la onda
     distancia=distancia/2 #se divide entre 2 pues la distancia del obstaculo es la mitad de la recorrida
 
-    if distancia<20: #Numero que define la distancia a la que debe estar el usuario
-        detectado=1
-        break
+    time.sleep(1)
+    print(distancia)
+    # if distancia<20: #Numero que define la distancia a la que debe estar el usuario
+    #     detectado=1
+    #     break
 
 
