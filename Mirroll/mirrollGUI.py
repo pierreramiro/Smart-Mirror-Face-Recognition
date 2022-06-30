@@ -647,11 +647,11 @@ class mirrollGUI(QtWidgets.QMainWindow):
             #Bajamos motor
             print("bajamos motor")
             diffAltura=abs(diffAltura)
-            BajarEspejo(diffAltura)
+            #BajarEspejo(diffAltura)
         elif diffAltura>0:
             #Subimos motor
             print("subimos motor")
-            SubirEspejo(diffAltura)
+            #SubirEspejo(diffAltura)
         else:
             #mantenemos la altura
             print("Dejamos la altura")
