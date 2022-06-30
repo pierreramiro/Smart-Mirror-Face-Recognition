@@ -123,6 +123,14 @@ class BT_DialogBox (QtWidgets.QDialog):
 
             elif received_data[0]==3:
                 #Cerramos aplicacion
+                #Guardamos los nuevos perfiles en un csv
+                file=open("userConfig.csv","w")
+                writer=csv.writer(file)
+                parent=self.parent()
+                perfiles=parent.perfiles
+                for row in perfiles[0:-1]:
+                    writer.writerow(row)
+                file.close()
                 self.close()
             else:
                 print("función no creada")
@@ -292,7 +300,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         reader=csv.reader(file)
         temp=[]
         for row in reader:
-            temp.append([int(row[0]),int(row[1]),row[2]]) # formato [altura,idColor,binData]
+            temp.append([float(row[0]),float(row[1]),row[2]]) # formato [altura,idColor,binData]
+        file.close()
         #Definimos el perfil 10 por defecto
         temp.append([30,7,"001"])
         self.perfiles=temp
@@ -517,7 +526,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 #Procedemos a verificar si hay rostro detectado
                 vs = VideoStream(src=0,framerate=10).start()
                 frame=vs.read()
-                cv2.imwrite("1.jpg",frame)
+                #cv2.imwrite("1.jpg",frame)
                 vs.stop()
                 #Obtenemos la cara de la foto
                 face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
