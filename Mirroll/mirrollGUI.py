@@ -105,6 +105,8 @@ class BT_DialogBox (QtWidgets.QDialog):
                 parent.IdUserToShow=idUser
                 #Obtengo el Id del color a modificar
                 parent.perfiles[idUser]=colores.index(color)
+                #activamos los actuadores
+                parent.configureGPIOMirrol()
 
             elif received_data[0]==2:
                 """Trama como admin"""
@@ -120,6 +122,8 @@ class BT_DialogBox (QtWidgets.QDialog):
                 parent.perfiles[idUser][0]=altura
                 parent.perfiles[idUser][1]=colores.index(color)
                 parent.perfiles[idUser][2]=BINtomacorrientes
+                #activamos los actuadores
+                parent.configureGPIOMirrol()
 
             elif received_data[0]==3:
                 #Cerramos aplicacion
@@ -134,7 +138,7 @@ class BT_DialogBox (QtWidgets.QDialog):
                 self.close()
             else:
                 print("función no creada")
-            #ACtivamos sondeo, que habiamos desactivado al inicio
+            #Activamos sondeo, que habiamos desactivado al inicio
             if not(self.CloseWindow):
                 self.timer_Datos.start()
             
@@ -340,13 +344,86 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.timer_activeUser.timeout.connect(self.stillThere)
         #Timer que actualiza los display de la GUI cuando se tiene al usuario activo
         self.timer_display=QTimer(self)
-        self.timer_display.timeout.connect(self.actualizar)
         self.timer_display.timeout.connect(self.displayFecha)
-        self.timer_display.timeout.connect(self.displayHora)        
+        self.timer_display.timeout.connect(self.displayHora) 
+        self.timer_GPIO=QTimer(self)
+        self.timer_GPIO.timeout.connect(self.configureGPIOMirrol)       
 
     """##################################"""
     """Establecemos los métodos/funciones"""
     """##################################"""
+    def ConfigRaspberryGPIO(self):
+        #Elegimos el modo de la numeración del chip BCM
+        gpio.setmode(gpio.BCM)
+        """Definimos la funcion de cada GPIO pin (in,out,serial,i2c,pwm,etc)"""
+        ######## CONTROL MOTOR #######
+        self.ENApin=17
+        self.DIRpin=27
+        self.PULpin=22
+        #Configuramos como salidas
+        gpio.setup(self.ENApin,gpio.OUT)
+        gpio.setup(self.DIRpin,gpio.OUT)
+        gpio.setup(self.PULpin,gpio.OUT)
+        #Configuramos todo en LOW
+        gpio.output(self.ENApin,gpio.HIGH)
+        gpio.output(self.DIRpin,gpio.LOW)
+        gpio.output(self.PULpin,gpio.LOW)
+        
+        gpio.setup(21,gpio.OUT)
+        gpio.output(21,gpio.HIGH)
+        ######## CONTROL CARGAS #######
+        self.CH1pin=10
+        self.CH2pin=9     
+        self.CH3pin=11
+        #Configuramos como salidas
+        gpio.setup(self.CH1pin,gpio.OUT)
+        gpio.setup(self.CH2pin,gpio.OUT)
+        gpio.setup(self.CH3pin,gpio.OUT)
+        #Configuramos todo en LOW
+        gpio.output(self.CH1pin,gpio.LOW)
+        gpio.output(self.CH2pin,gpio.LOW)
+        gpio.output(self.CH3pin,gpio.LOW)
+        
+        ######## ENTRADAS LIMITS SWITCH #######
+        """Ojo, el pin 5 no tiene pullup.. asi que usamos el pin3 como una fuente de 3.3v"""
+        gpio.setup(3,gpio.OUT)
+        gpio.output(3,gpio.HIGH)
+        self.LSUPpin=5
+        self.LSDOWNpin=6
+        #Configuramos como entradas
+        gpio.setup(self.LSUPpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
+        gpio.setup(self.LSDOWNpin,gpio.IN,pull_up_down=gpio.PUD_UP)
+
+        ######## BLUETOOTH #######
+        ser = serial.Serial ("/dev/ttyS0", 9600)    #Open port with baud rate
+
+        ######## CONTROL LUCES #######
+        self.LREDpin=18
+        self.LGREENpin=23
+        self.LBLUEpin=24
+        #Configuramos como salidas
+        gpio.setup(self.LREDpin,gpio.OUT)
+        gpio.setup(self.LGREENpin,gpio.OUT)
+        gpio.setup(self.LBLUEpin,gpio.OUT)
+        #Configuramos todo en LOW
+        gpio.output(self.LREDpin,gpio.LOW)
+        gpio.output(self.LGREENpin,gpio.LOW)
+        gpio.output(self.LBLUEpin,gpio.LOW)
+
+        ######## ENTRADA BOTON #######
+        self.BUTTONpin=25
+        #Configuramos como entrada
+        gpio.setup(self.BUTTONpin,gpio.IN,pull_up_down=gpio.PUD_UP)
+        
+        ######## SENSOR ULTRASONIDO #######
+        self.ECHOpin=12
+        self.TRIGpin=16
+        #Configuramos como entrada
+        gpio.setup(self.ECHOpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
+        #Configuramos como salida
+        gpio.setup(self.TRIGpin,gpio.OUT)
+        gpio.output(self.TRIGpin,gpio.LOW)
+
     def initMirror(self):
         if self.initFlag:
             """Colocamos una imagen o algo de bienvenida.. un layout"""
@@ -419,6 +496,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 #Verificamos si no hubo un match
                 if idUserMatch==[0]*10:
                     #Configuración por defecto
+                    self.IdUserToShow=10
                     self.configureGPIOMirrol()
                     self.IdUserToShow =10                    
                     print(f"Usuario Desconocido")
@@ -428,7 +506,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
                     self.IdUserToShow =idUserMatch.index(max(idUserMatch))
                     print(f"Usuario a mostrar: User{self.IdUserToShow+1}")
-                    self.configureGPIOMirrol(self.IdUserToShow)
+                    self.configureGPIOMirrol()
                 #Detenemos este timer y habilitamos otro que actualizara Fecha, hora, botón, BT, entre otros
                 self.timer_sondeaPresencia.stop()
                 self.timer_display.start(500)
@@ -438,48 +516,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
         else:
             self.setColorLeds("noColor")
 
-    def setColorLeds(self,color):
-        #actualizamos el color
-        idColor=colores.index(color)
-        #Definimos los canales
-        gpio.output(self.LREDpin,coloresGPIO[idColor][0])
-        gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
-        gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
-    
-    def configureGPIOMirrol(self,idUser=10):
-        #Chequeamos los estados
-        self.estadoS1= "1"==self.perfiles[idUser][2][0]
-        self.estadoS2= "1"==self.perfiles[idUser][2][1]
-        self.estadoS3= "1"==self.perfiles[idUser][2][2]
-        #Chequeamos el estado y configuracmos los RELES, también la GUI
-        if self.estadoS1 == False:
-            #Hacemos la impresion que se tiene ha soltado el botón
-            self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
-            gpio.output(self.CH1pin,gpio.LOW)        
-        else:
-            #Hacemos la impresion que se tiene presionado el botón
-            self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-            gpio.output(self.CH1pin,gpio.HIGH)
-        if self.estadoS2 == False:
-            gpio.output(self.CH2pin,gpio.LOW)
-            self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
-        else:
-            gpio.output(self.CH2pin,gpio.HIGH)
-            self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-            
-        if self.estadoS3 == False:
-            self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
-            gpio.output(self.CH3pin,gpio.LOW)
-        else:
-            gpio.output(self.CH3pin,gpio.HIGH)
-            self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-        #actualizamos el color
-        idColor=int(self.perfiles[idUser][1])
-        gpio.output(self.LREDpin,coloresGPIO[idColor][0])
-        gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
-        gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
-        #Actualizamos la altura
-        # 
     def stillThere(self):
         #Verificamos el boton
         if gpio.input(self.BUTTONpin)==False:
@@ -553,15 +589,24 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     self.timer_display.stop()
                     self.setSleepMirrolMode()
                     self.timer_sondeaPresencia.start(1000)
-                    
-    def setSleepMirrolMode(self):
-        self.setColorLeds("noColor")
-        gpio.output(self.CH1pin,gpio.LOW)
-        gpio.output(self.CH2pin,gpio.LOW)
-        gpio.output(self.CH3pin,gpio.LOW)
-        self.SubirEspejo()
+    
+    def displayFecha(self):
+        """Fecha"""
+        currentFecha = QDate.currentDate()
+        dia = currentFecha.toString('dddd')
+        numero_dia = currentFecha.toString('dd')
+        mes = currentFecha.toString('MMMM')
+        anho = currentFecha.toString('yyyy')
+        displayFecha = (dia + ', ' + numero_dia + ' de ' + mes + ' del ' + anho)
+        self.ui.fecha.setText(displayFecha)
+    
+    def displayHora(self):
+        """Hora"""
+        currentHora = QTime.currentTime()
+        displayHora = currentHora.toString('hh:mm')
+        self.ui.hora.setText(displayHora)
 
-    def actualizar(self):
+    def configureGPIOMirrol(self):
         """Relés"""
         self.estadoS1= "1"==self.perfiles[self.IdUserToShow][2][0]
         self.estadoS2= "1"==self.perfiles[self.IdUserToShow][2][1]
@@ -594,94 +639,21 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
         gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
 
-    def displayFecha(self):
-        """Fecha"""
-        currentFecha = QDate.currentDate()
-        dia = currentFecha.toString('dddd')
-        numero_dia = currentFecha.toString('dd')
-        mes = currentFecha.toString('MMMM')
-        anho = currentFecha.toString('yyyy')
-        displayFecha = (dia + ', ' + numero_dia + ' de ' + mes + ' del ' + anho)
-        self.ui.fecha.setText(displayFecha)
+    def setColorLeds(self,color):
+        #actualizamos el color
+        idColor=colores.index(color)
+        #Definimos los canales
+        gpio.output(self.LREDpin,coloresGPIO[idColor][0])
+        gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
+        gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
     
-    def displayHora(self):
-        """Hora"""
-        currentHora = QTime.currentTime()
-        displayHora = currentHora.toString('hh:mm')
-        self.ui.hora.setText(displayHora)
-
-    def ConfigRaspberryGPIO(self):
-        #Elegimos el modo de la numeración del chip BCM
-        gpio.setmode(gpio.BCM)
-        """Definimos la funcion de cada GPIO pin (in,out,serial,i2c,pwm,etc)"""
-        ######## CONTROL MOTOR #######
-        self.ENApin=17
-        self.DIRpin=27
-        self.PULpin=22
-        #Configuramos como salidas
-        gpio.setup(self.ENApin,gpio.OUT)
-        gpio.setup(self.DIRpin,gpio.OUT)
-        gpio.setup(self.PULpin,gpio.OUT)
-        #Configuramos todo en LOW
-        gpio.output(self.ENApin,gpio.HIGH)
-        gpio.output(self.DIRpin,gpio.LOW)
-        gpio.output(self.PULpin,gpio.LOW)
-        
-        gpio.setup(21,gpio.OUT)
-        gpio.output(21,gpio.HIGH)
-        ######## CONTROL CARGAS #######
-        self.CH1pin=10
-        self.CH2pin=9     
-        self.CH3pin=11
-        #Configuramos como salidas
-        gpio.setup(self.CH1pin,gpio.OUT)
-        gpio.setup(self.CH2pin,gpio.OUT)
-        gpio.setup(self.CH3pin,gpio.OUT)
-        #Configuramos todo en LOW
+    def setSleepMirrolMode(self):
+        self.setColorLeds("noColor")
         gpio.output(self.CH1pin,gpio.LOW)
         gpio.output(self.CH2pin,gpio.LOW)
         gpio.output(self.CH3pin,gpio.LOW)
-        
-        ######## ENTRADAS LIMITS SWITCH #######
-        """Ojo, el pin 5 no tiene pullup.. asi que usamos el pin3 como una fuente de 3.3v"""
-        gpio.setup(3,gpio.OUT)
-        gpio.output(3,gpio.HIGH)
-        self.LSUPpin=5
-        self.LSDOWNpin=6
-        #Configuramos como entradas
-        gpio.setup(self.LSUPpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
-        gpio.setup(self.LSDOWNpin,gpio.IN,pull_up_down=gpio.PUD_UP)
-
-        ######## BLUETOOTH #######
-        ser = serial.Serial ("/dev/ttyS0", 9600)    #Open port with baud rate
-
-        ######## CONTROL LUCES #######
-        self.LREDpin=18
-        self.LGREENpin=23
-        self.LBLUEpin=24
-        #Configuramos como salidas
-        gpio.setup(self.LREDpin,gpio.OUT)
-        gpio.setup(self.LGREENpin,gpio.OUT)
-        gpio.setup(self.LBLUEpin,gpio.OUT)
-        #Configuramos todo en LOW
-        gpio.output(self.LREDpin,gpio.LOW)
-        gpio.output(self.LGREENpin,gpio.LOW)
-        gpio.output(self.LBLUEpin,gpio.LOW)
-
-        ######## ENTRADA BOTON #######
-        self.BUTTONpin=25
-        #Configuramos como entrada
-        gpio.setup(self.BUTTONpin,gpio.IN,pull_up_down=gpio.PUD_UP)
-        
-        ######## SENSOR ULTRASONIDO #######
-        self.ECHOpin=12
-        self.TRIGpin=16
-        #Configuramos como entrada
-        gpio.setup(self.ECHOpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
-        #Configuramos como salida
-        gpio.setup(self.TRIGpin,gpio.OUT)
-        gpio.output(self.TRIGpin,gpio.LOW)
-        
+        self.SubirEspejo()
+   
     def BajarEspejo(self,altura=-1,STEPTIME=STEPTIME_motor*1000): #STEPTIME debe estar en nanosecs
         #Habilitamos el driver del motor
         gpio.output(self.ENApin,gpio.LOW)
