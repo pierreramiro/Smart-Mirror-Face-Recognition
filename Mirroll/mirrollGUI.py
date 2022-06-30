@@ -1,6 +1,4 @@
 import encodings
-from quopri import encode
-from Control.Motor.controlMotor import SubirEspejo
 from MainWindow import Ui_MainWindow
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -354,8 +352,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
             self.initFlag=False
         else:
             self.timer_initMirroll.stop()
-            self.BajarEspejo()#debe ser subir
-            #self.SubirEspejo()
+            self.SubirEspejo()
             print("Limit activado!")
             #Procedemos a entrar al modo sleep!
             self.setSleepMirrolMode()
@@ -440,6 +437,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.LREDpin,coloresGPIO[idColor][0])
         gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
         gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
+    
     def configureGPIOMirrol(self,idUser=10):
         #Chequeamos los estados
         self.estadoS1= "1"==self.perfiles[idUser][2][0]
@@ -620,10 +618,13 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.CH3pin,gpio.LOW)
         
         ######## ENTRADAS LIMITS SWITCH #######
+        """Ojo, el pin 5 no tiene pullup.. asi que usamos el pin3 como una fuente de 3.3v"""
+        gpio.setup(3,gpio.OUT)
+        gpio.output(3,gpio.HIGH)
         self.LSUPpin=5
         self.LSDOWNpin=6
         #Configuramos como entradas
-        gpio.setup(self.LSUPpin,gpio.IN,pull_up_down=gpio.PUD_UP)
+        gpio.setup(self.LSUPpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
         gpio.setup(self.LSDOWNpin,gpio.IN,pull_up_down=gpio.PUD_UP)
 
         ######## BLUETOOTH #######
@@ -690,7 +691,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.DIRpin,gpio.HIGH)
         if altura==-1:
             #Subimos el espejo hasta sentir el limit switch
-            while gpio.input(self.LSUPpin)!=0:
+            while gpio.input(self.LSUPpin)==0:#notar que se detiene en flanco de subida!
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
