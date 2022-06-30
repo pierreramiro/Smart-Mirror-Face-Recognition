@@ -1,13 +1,12 @@
 import encodings
 from quopri import encode
-from Control.Motor.controlMotor import SubirEspejo
 from MainWindow import Ui_MainWindow
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer, QTime, QDate
 from PyQt5.QtGui import QImage,QPixmap
 import time
-import csv
+
 #Librería para el control del Raspberry
 import RPi.GPIO as gpio
 import serial #uart
@@ -21,7 +20,6 @@ from imutils.video import VideoStream
 import imutils
 
 #Variables globales
-noColor=[gpio.LOW,gpio.LOW,gpio.LOW]
 rojo=[gpio.LOW,gpio.HIGH,gpio.LOW]
 verde=[gpio.HIGH,gpio.LOW,gpio.LOW]
 azul=[gpio.LOW,gpio.LOW,gpio.HIGH]
@@ -29,8 +27,8 @@ amarillo=[gpio.HIGH,gpio.HIGH,gpio.LOW]
 cian=[gpio.HIGH,gpio.LOW,gpio.HIGH]
 rosado=[gpio.LOW,gpio.HIGH,gpio.HIGH]
 blanco=[gpio.HIGH,gpio.HIGH,gpio.HIGH]
-colores=["noColor","rojo","verde","azul","amarillo","cian","rosado","blanco"]
-coloresGPIO=[noColor,rojo,verde,azul,amarillo,cian,rosado,blanco]
+colores=["rojo","verde","azul","amarillo","cian","rosado","blanco"]
+coloresGPIO=[rojo,verde,azul,amarillo,cian,rosado,blanco]
 #Face Recog resources
 imagenesFaceRecognition = ['RostroIzq','RostroIzqMID','RostroFrente','RostroDerMID','RostroDer','RostroArriba']
 imagenesProcessing=["Procesando1.png","Procesando2.png","Procesando3.png","Procesando4.png","Procesando5.png","Procesando6.png"]
@@ -38,8 +36,7 @@ imagenesProcessing=["Procesando1.png","Procesando2.png","Procesando3.png","Proce
 usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","user8","user9"]
 #Cargamos el archivo precargado de los faces
 knownEncodings = pickle.loads(open("encodings.pickle", "rb").read())
-#variables globales
-STEPTIME_motor=125/2#en microsegundos
+
 
 """ //////////////////////////////////////////
     //               Clases                 //
@@ -120,7 +117,8 @@ class BT_DialogBox (QtWidgets.QDialog):
             elif received_data[0]==3:
                 parent=self.parent()
                 #activamos nuevamente el sondeo
-                parent.timer_activeUser.start(10)
+                parent.waitingBT=1
+                parent.timer_BT.start(5)
                 #Cerramos aplicacion
                 self.close()
             else:
@@ -299,17 +297,13 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Creamos nuestra GUI
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        #Cargamos el archivo guardado con la configuracion de los perfiles
-        file=open("userConfig.csv","r")
-        reader=csv.reader(file)
+        #Definimos 10 perfiles por defecto
         temp=[]
-        for row in reader:
-            temp.append([int(row[0]),int(row[1]),row[2]]) # formato [altura,idColor,binData]
-        #Definimos el perfil 10 por defecto
-        temp.append([30,7,"001"])
+        for i in range(10):
+            temp.append([0,4,"111"]) # guardamos los datos de los perfiles [altura,idColor,binData]
         self.perfiles=temp
-        #Indicamos el usuario a mostrar y su personalización
-        self.IdUserToShow=10#por defecto
+        #Indicamos el usuario a mostrar su personalización
+        self.IdUserToShow=0
         self.estadoS1= "1"==self.perfiles[self.IdUserToShow][2][0]
         self.estadoS2= "1"==self.perfiles[self.IdUserToShow][2][1]
         self.estadoS3= "1"==self.perfiles[self.IdUserToShow][2][2]
@@ -318,232 +312,42 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.hora_actual="18:00 pm"
         self.temperatura_actual="21"
         self.ui.temperatura.setText(self.temperatura_actual)   
-        #Creamos unas variables flags
-        self.initFlag=True
-        #Definimos unas variables
+        #Creamos unas banderas
+        self.SomeOneIsInFront=False
+        #Creamos unas variables
         self.maxDistance= 60#maxima distancia en cm
         self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO
         self.minDistance= 30#maxima distancia en cm
         self.minTimeEcho= self.minDistance*2/0.034
-        self.STEPTIME=STEPTIME_motor #En microsegundos
-        self.actualAltura=30
         #Configuramos los pines del Raspberry
         self.ConfigRaspberryGPIO()
+        #Bajamos el espejo
+        self.BajarEspejo()
+        #Habilitamos para esperar conexion BT
+        self.waitingBT=1
+        """Creamos distintos timer que realizarán un sondeo (Poll) y actualizarán datos"""
+        #Timer para actualizar los PARAMETROS DE LA INTERFAZ
+        self.timer_Params = QTimer(self)
+        self.timer_Params.timeout.connect(self.displayFecha)
+        self.timer_Params.timeout.connect(self.displayHora)
+        self.timer_Params.timeout.connect(self.actualizar)
+        self.timer_Params.start(500)
+        #Timer para escuchar al BLUETOOTH
+        self.timer_BT = QTimer(self)
+        self.timer_BT.timeout.connect(self.sondeoBT)
+        self.timer_BT.start(5)
         
-        """Creamos distintos timer que realizarán un sondeo (Poll), actualizarán datos, checar{a el sleep entre otros"""
-        #Timer para inicio de Mirroll
-        self.timer_initMirroll= QTimer(self)
-        self.timer_initMirroll.timeout.connect(self.initMirror)
-        self.timer_initMirroll.start(800)
-        #Creamos el timer para sondear presencia de usuarios
-        self.timer_sondeaPresencia=QTimer(self)
-        self.timer_sondeaPresencia.timeout.connect(self.sondeaPresencia)
-        #Creamos el timer cuando se tiene un usuario activo
-        self.timer_activeUser=QTimer(self)
-        self.timer_activeUser.timeout.connect(self.stillThere)
-        #Timer que actualiza los display de la GUI cuando se tiene al usuario activo
-        self.timer_display=QTimer(self)
-        self.timer_display.timeout.connect(self.actualizarDisplay)        
+        #Timer para escuchar al SENSOR ULTRASONIDO
+        self.timer_HCSR = QTimer(self)
+        self.timer_HCSR.timeout.connect(self.sondeoSensor)
+        self.timer_HCSR.start(1000)
+
 
     """##################################"""
     """Establecemos los métodos/funciones"""
     """##################################"""
-    def initMirror(self):
-        if self.initFlag:
-            """Colocamos una imagen o algo de bienvenida.. un layout"""
-            self.initFlag=False
-        else:
-            self.timer_initMirroll.stop()
-            self.BajarEspejo()#debe ser subir
-            #self.SubirEspejo()
-            print("Limit activado!")
-            #Procedemos a entrar al modo sleep!
-            self.setSleepMirrolMode()
-            #Empezamos a sondear presencia
-            self.timer_sondeaPresencia.start(1000)   
-
-    def sondeaPresencia(self):
-        #medimos la distancia del sensor ultrasonido
-        #tiempo de muestreo
-        gpio.output(self.TRIGpin,gpio.HIGH)
-        t1=time.time()
-        #esperamos a cumplir los 10usec
-        while time.time()<t1+0.00001: #nosotros esperamos hasta 10us
-            pass
-        gpio.output(self.TRIGpin,gpio.LOW)
-        #Esperamos el echo en HIGH
-        while not(gpio.input(self.ECHOpin)):
-            #El echo tiene un timeout y se setea en baja
-            pass
-        t1=time.time()
-        #Esperamos el echo en flanco de bajada
-        while gpio.input(self.ECHOpin):
-            pass
-        runnningTime=(time.time()-t1)*1000000
-        #Verificamos los rangos para verificar si hay persona en frente
-        if runnningTime<self.maxTimeEcho: 
-            #Tenemos una persona en frente!. Prendemos luces en blanco
-            self.setColorLeds("blanco")
-            #Verificamos rostro con camara..
-            print("distancia:",runnningTime*0.034/2)
-            #Procedemos a verificar si hay rostro detectado
-            vs = VideoStream(src=0,framerate=10).start()
-            frame=vs.read()
-            cv2.imwrite("1.jpg",frame)
-            vs.stop()
-            #Obtenemos la cara de la foto
-            face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-            gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-            faces=face_cascade.detectMultiScale(gray,1.1,4)
-            if len(faces)!=0:
-                #Hay cara! será conocida o desconocidad???
-                #Salimos del modo sleep
-                boxes = face_recognition.face_locations(frame)
-                frame = imutils.resize(frame, width=500)
-                # Detect the face boxes
-                boxes = face_recognition.face_locations(frame)
-                # compute the facial embeddings for each face bounding box
-                encodings = face_recognition.face_encodings(frame, boxes)
-                #definimos una variable para hallar que usuario tuvo mas match
-                idUserMatch=[0]*10
-                #De los encodings obtenidos (rostros calculados), verificamos con los conocidos
-                for encoding in encodings:
-                    for id,dataEncs in enumerate(knownEncodings):
-                        #Calculamos la cantidad de aciertos
-                        matches=face_recognition.compare_faces(dataEncs,encoding)
-                        #Sumamos la cantidad de aciertos
-                        idUserMatch[id]+=matches.count(True) 
-                #Verificamos si no hubo un match
-                if idUserMatch==[0]*10:
-                    #Configuración por defecto
-                    self.configureGPIOMirrol()
-                    self.IdUserToShow =10                    
-                else:
-                    #Configuracion personalizada
-                    #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
-                    self.IdUserToShow =idUserMatch.index(max(idUserMatch))
-                    print(f"Usuario a mostrar: User{self.IdUserToShow+1}")
-                    self.configureGPIOMirrol(self.IdUserToShow)
-                #Detenemos este timer y habilitamos otro que actualizara Fecha, hora, botón, BT, entre otros
-                self.timer_sondeaPresencia.stop()
-                self.timer_activeUser.start(10)
-                self.timer_display.start(500)
-            #En caso no se haya detectado cara, no hacemos ninguna configuración. 
-            #Seguimos en hibernacion.. probando
-        else:
-            self.setColorLeds("noColor")
-
-    def setColorLeds(self,color):
-        #actualizamos el color
-        idColor=colores.index(color)
-        #Definimos los canales
-        gpio.output(self.LREDpin,coloresGPIO[idColor][0])
-        gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
-        gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
-    def configureGPIOMirrol(self,idUser=10):
+    def actualizar(self):
         #Chequeamos los estados
-        self.estadoS1= "1"==self.perfiles[idUser][2][0]
-        self.estadoS2= "1"==self.perfiles[idUser][2][1]
-        self.estadoS3= "1"==self.perfiles[idUser][2][2]
-        #Chequeamos el estado y configuracmos los RELES, también la GUI
-        if self.estadoS1 == False:
-            #Hacemos la impresion que se tiene ha soltado el botón
-            self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
-            gpio.output(self.CH1pin,gpio.LOW)        
-        else:
-            #Hacemos la impresion que se tiene presionado el botón
-            self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-            gpio.output(self.CH1pin,gpio.HIGH)
-        if self.estadoS2 == False:
-            gpio.output(self.CH2pin,gpio.LOW)
-            self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
-        else:
-            gpio.output(self.CH2pin,gpio.HIGH)
-            self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-            
-        if self.estadoS3 == False:
-            self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
-            gpio.output(self.CH3pin,gpio.LOW)
-        else:
-            gpio.output(self.CH3pin,gpio.HIGH)
-            self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-        #actualizamos el color
-        idColor=self.perfiles[idUser][1]
-        gpio.output(self.LREDpin,coloresGPIO[idColor][0])
-        gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
-        gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
-        #Actualizamos la altura
-        # 
-    def stillThere(self):
-        #Verificamos el boton
-        if gpio.input(self.BUTTONpin)==False:
-            #Detenemos el sondeo
-            self.timer_activeUser.stop()
-            #ponemos un popup de BT activado
-            dlg = BT_DialogBox(self)
-            dlg.show()
-        else:
-            gpio.output(self.TRIGpin,gpio.HIGH)
-            t1=time.time()
-            #esperamos a cumplir los 10usec
-            while time.time()<t1+0.00001: #nosotros esperamos hasta 10us
-                pass
-            gpio.output(self.TRIGpin,gpio.LOW)
-            #Esperamos el echo en HIGH
-            while not(gpio.input(self.ECHOpin)):
-                #El echo tiene un timeout y se setea en baja
-                pass
-            t1=time.time()
-            #Esperamos el echo en flanco de bajada
-            while gpio.input(self.ECHOpin):
-                pass
-            runnningTime=(time.time()-t1)*1000000
-            if runnningTime>self.maxTimeEcho:
-                #Ya no hay persona al frente. Pero verificamos nuevamente
-                """Calculamos nuevamente con el sensor"""
-                time.sleep(1)
-                gpio.output(self.TRIGpin,gpio.HIGH)
-                t1=time.time()
-                #esperamos a cumplir los 10usec
-                while time.time()<t1+0.00001: #nosotros esperamos hasta 10us
-                    pass
-                gpio.output(self.TRIGpin,gpio.LOW)
-                #Esperamos el echo en HIGH
-                while not(gpio.input(self.ECHOpin)):
-                    #El echo tiene un timeout y se setea en baja
-                    pass
-                t1=time.time()
-                #Esperamos el echo en flanco de bajada
-                while gpio.input(self.ECHOpin):
-                    pass
-                runnningTime=(time.time()-t1)*1000000
-                """Calculemos con la camara"""
-                #Procedemos a verificar si hay rostro detectado
-                vs = VideoStream(src=0,framerate=10).start()
-                frame=vs.read()
-                cv2.imwrite("1.jpg",frame)
-                vs.stop()
-                #Obtenemos la cara de la foto
-                face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-                gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-                faces=face_cascade.detectMultiScale(gray,1.1,4)
-                if runnningTime>self.maxTimeEcho and len(faces)==0:
-                    #Si esta vez no se vuelve a detectar a nadie.. Entramos en modo sleep
-                    #activamos nuevamente el timer adecuado y apagamos los actuales
-                    self.timer_activeUser.stop()
-                    self.timer_display.stop()
-                    self.setSleepMirrolMode()
-                    self.timer_sondeaPresencia.start(1000)
-                    
-    def setSleepMirrolMode(self):
-        self.setColorLeds("noColor")
-        gpio.output(self.CH1pin,gpio.LOW)
-        gpio.output(self.CH2pin,gpio.LOW)
-        gpio.output(self.CH3pin,gpio.LOW)
-        self.SubirEspejo()
-
-    def actualizarDisplay(self):
-        """Relés"""
         self.estadoS1= "1"==self.perfiles[self.IdUserToShow][2][0]
         self.estadoS2= "1"==self.perfiles[self.IdUserToShow][2][1]
         self.estadoS3= "1"==self.perfiles[self.IdUserToShow][2][2]
@@ -569,12 +373,13 @@ class mirrollGUI(QtWidgets.QMainWindow):
         else:
             gpio.output(self.CH3pin,gpio.HIGH)
             self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-        """Color"""
+        #actualizamos el color
         idColor=self.perfiles[self.IdUserToShow][1]
         gpio.output(self.LREDpin,coloresGPIO[idColor][0])
         gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
         gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
-        """Fecha"""
+    
+    def displayFecha(self):   
         currentFecha = QDate.currentDate()
         dia = currentFecha.toString('dddd')
         numero_dia = currentFecha.toString('dd')
@@ -582,7 +387,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         anho = currentFecha.toString('yyyy')
         displayFecha = (dia + ', ' + numero_dia + ' de ' + mes + ' del ' + anho)
         self.ui.fecha.setText(displayFecha)
-        """Hora"""
+    
+    def displayHora(self):
         currentHora = QTime.currentTime()
         displayHora = currentHora.toString('hh:mm')
         self.ui.hora.setText(displayHora)
@@ -656,7 +462,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.setup(self.TRIGpin,gpio.OUT)
         gpio.output(self.TRIGpin,gpio.LOW)
         
-    def BajarEspejo(self,altura=-1,STEPTIME=STEPTIME_motor*1000): #STEPTIME debe estar en nanosecs
+    def BajarEspejo(self,altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
         #Habilitamos el driver del motor
         gpio.output(self.ENApin,gpio.LOW)
         #Definimos la dirección
@@ -683,20 +489,21 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Deshabilitamos el driver del motor
         gpio.output(self.ENApin,gpio.HIGH)
     
-    def SubirEspejo(self,altura=-1,STEPTIME=STEPTIME_motor*1000): #STEPTIME debe estar en nanosecs
+    def SubirEspejo(self,altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
         #Habilitamos el driver del motor
         gpio.output(self.ENApin,gpio.LOW)
         #Definimos la dirección
         gpio.output(self.DIRpin,gpio.HIGH)
         if altura==-1:
-            #Subimos el espejo hasta sentir el limit switch
-            while gpio.input(self.LSUPpin)!=0:
+            #Bajamos el espejo hasta sentir el limit switch
+            while gpio.input(self.LSDOWNpin)!=0:
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
                 initTime=time.time_ns()
                 while time.time_ns()-initTime<STEPTIME:
                     pass
+
                 #Ponemos en LOW
                 gpio.output(self.PULpin,gpio.LOW)        
                 #Esperamos en LOW

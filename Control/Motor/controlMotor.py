@@ -10,7 +10,7 @@ def SubirEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
     gpio.output(DIRpin,gpio.HIGH)
     if altura==-1:
         #Bajamos el espejo hasta sentir el limit switch
-        while gpio.input(LSDOWNpin)!=0:
+        while gpio.input(LSUPpin)!=0:
             #Ponemos en HIGH
             gpio.output(PULpin,gpio.HIGH)        
             #Esperamos en HIGH
@@ -79,13 +79,13 @@ if __name__=="__main__":
     LSUPpin=5
     LSDOWNpin=6
     #Configuramos como entradas
-    gpio.setup(LSUPpin,gpio.IN,pull_up_down=gpio.PUD_UP)
+    gpio.setup(LSUPpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
     gpio.setup(LSDOWNpin,gpio.IN,pull_up_down=gpio.PUD_UP)
 
     while True:
-
+        print(gpio.input(LSUPpin))
         #gpio.output(ENApin,gpio.HIGH)
         #gpio.output(DIRpin,gpio.LOW)
         #gpio.output(PULpin,gpio.HIGH)
         #BajarEspejo()
-        SubirEspejo()
+#        SubirEspejo()
