@@ -46,7 +46,6 @@ STEPTIME_motor=125/2#en microsegundos
 class BT_DialogBox (QtWidgets.QDialog):
     def __init__(self,parent=None):
         super(BT_DialogBox,self).__init__(parent)
-        self.parent=parent
         #Ponemos un nombre a la ventana
         self.setWindowTitle("Notificación")
         #creo el layout de nuestra ventana (vertical)
@@ -63,12 +62,17 @@ class BT_DialogBox (QtWidgets.QDialog):
         self.setLayout(self.layout)
         #Abrir puerto
         self.ser = serial.Serial ("/dev/ttyS0", 9600)    #Open port with baud rate
+        #Flag
+        self.ConfigRostro=False
+        self.CloseWindow=False
         #Creamos timer para sondear datos
         self.timer_Datos=QTimer()
         self.timer_Datos.timeout.connect(self.sondeaDatos)
         self.timer_Datos.start(300)
 
     def sondeaDatos(self):
+        if self.ConfigRostro:
+            return
         #recibir data:   [funcion,idUser,color,BINtomacorrientes,altura]
         received_data = self.ser.read()              #read serial port
         time.sleep(0.03)
@@ -87,7 +91,9 @@ class BT_DialogBox (QtWidgets.QDialog):
                 print("Al usuario: ",received_data[1],"Le modificaremos su rostro")
                 #ponemos un popup de BT activado
                 temp=received_data[1]-1
-                dlg = configureUser_DialogBox(self.parent,temp) #Le restamos porque en la app están del 1 al 10
+                parent=self.parent()
+                self.ConfigRostro=True
+                dlg = configureUser_DialogBox(parent,self,temp) #Le restamos porque en la app están del 1 al 10
                 dlg.show()
             elif received_data[0]==1:
                 """Trama como usuario básico"""
@@ -116,27 +122,30 @@ class BT_DialogBox (QtWidgets.QDialog):
                 parent.perfiles[idUser][2]=BINtomacorrientes
 
             elif received_data[0]==3:
-                parent=self.parent()
-                #activamos nuevamente el sondeo
-                parent.timer_activeUser.start(10)
                 #Cerramos aplicacion
                 self.close()
             else:
                 print("función no creada")
             #ACtivamos sondeo, que habiamos desactivado al inicio
-            self.timer_Datos.start()
+            if not(self.CloseWindow):
+                self.timer_Datos.start()
             
     #Esta función por si sola nos permite aceptar el evento de cierre (not modified)
     def closeEvent(self, event):
-        self.timer_Datos.stop()
+        parent=self.parent()
+        #activamos nuevamente el sondeo
+        parent.timer_display.start(500)
+        parent.timer_activeUser.start(100)
+        self.CloseWindow=True
+        print("Salimos del BT mode")
         event.accept()
 
 class configureUser_DialogBox (QtWidgets.QDialog):
-    def __init__(self,parent=None,idUser=0):
+    def __init__(self,parent=None,child=None,idUser=0):
         super(configureUser_DialogBox,self).__init__(parent)
-        self.parent=parent
+        self.child=child
         #añadimos flag
-        self.parent.AddingNewUser=True
+        parent.AddingNewUser=True
         #Ponemos un nombre a la ventana3
         self.setWindowTitle("Reconocimiento Facial")
         self.setWindowIcon(QtGui.QIcon('resources/RFLogo.png'))
@@ -169,9 +178,10 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.timer_two.timeout.connect(self.processPicsNewUser)
         #Iniciamos los timer
         self.timer_one.start(800)
-        
+        print("Salimos del init FR")
         
     def takePicsNewUser(self):
+        print("Tomamos foto")
         if self.countPics==self.maxNumbersPics:
             #Detenenmos este timer
             self.timer_one.stop()
@@ -232,6 +242,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             self.frames.append(frame)
         
     def processPicsNewUser(self):
+        print("procesamos foto")
         if self.countPics==self.maxNumbersPics:
             #desahibiltamos el timer
             self.timer_two.stop()
@@ -265,30 +276,9 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.setLayout(self.layout)    
         #aumentamos el contador
         self.countPics+=1
-
-    def cambiaImagen(self):#Ya no se usa
-        self.j=self.j+1
-        if self.i<0 and (self.j%15==0):
-            self.sencondLine.setStyleSheet("font: 21pt \"Arial Rounded MT Bold\";")
-            self.sencondLine.setAlignment(QtCore.Qt.AlignCenter)
-            self.layout.addWidget(self.sencondLine)
-            self.layout.addWidget(self.imageLabel)
-            self.i=self.i+1
-
-        if self.i<len(imagenesFaceRecognition) and self.i>=0 and (self.j%15==0):
-            image=QImage('resources/'+imagenesFaceRecognition[self.i]+'.png')
-            self.imageLabel.setPixmap(QPixmap.fromImage(image))
-            self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
-            self.setLayout(self.layout)
-            self.i=self.i+1
-
-        if (self.j%15)==13 and self.j>=28:
-            image=QImage('resources/CamP.png')
-            self.imageLabel.setPixmap(QPixmap.fromImage(image))
-            self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
-            self.setLayout(self.layout)
     
     def closeEvent(self, event):#Ya no se usa
+        self.child.ConfigRostro=False
         event.accept()
 
 class mirrollGUI(QtWidgets.QMainWindow):
@@ -341,7 +331,9 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.timer_activeUser.timeout.connect(self.stillThere)
         #Timer que actualiza los display de la GUI cuando se tiene al usuario activo
         self.timer_display=QTimer(self)
-        self.timer_display.timeout.connect(self.actualizarDisplay)        
+        self.timer_display.timeout.connect(self.actualizar)
+        self.timer_display.timeout.connect(self.displayFecha)
+        self.timer_display.timeout.connect(self.displayHora)        
 
     """##################################"""
     """Establecemos los métodos/funciones"""
@@ -415,6 +407,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     #Configuración por defecto
                     self.configureGPIOMirrol()
                     self.IdUserToShow =10                    
+                    print(f"Usuario Desconocido")
+                    
                 else:
                     #Configuracion personalizada
                     #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
@@ -423,8 +417,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     self.configureGPIOMirrol(self.IdUserToShow)
                 #Detenemos este timer y habilitamos otro que actualizara Fecha, hora, botón, BT, entre otros
                 self.timer_sondeaPresencia.stop()
-                self.timer_activeUser.start(10)
                 self.timer_display.start(500)
+                self.timer_activeUser.start(100)
             #En caso no se haya detectado cara, no hacemos ninguna configuración. 
             #Seguimos en hibernacion.. probando
         else:
@@ -473,14 +467,17 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Actualizamos la altura
         # 
     def stillThere(self):
+        print("verificamos boton")
         #Verificamos el boton
         if gpio.input(self.BUTTONpin)==False:
             #Detenemos el sondeo
+            print("Button pressed")
             self.timer_activeUser.stop()
             #ponemos un popup de BT activado
             dlg = BT_DialogBox(self)
             dlg.show()
         else:
+            print("primer sensado")
             gpio.output(self.TRIGpin,gpio.HIGH)
             t1=time.time()
             #esperamos a cumplir los 10usec
@@ -497,6 +494,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 pass
             runnningTime=(time.time()-t1)*1000000
             if runnningTime>self.maxTimeEcho:
+                print("segundo sensado con camara")
                 #Ya no hay persona al frente. Pero verificamos nuevamente
                 """Calculamos nuevamente con el sensor"""
                 time.sleep(1)
@@ -528,6 +526,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 if runnningTime>self.maxTimeEcho and len(faces)==0:
                     #Si esta vez no se vuelve a detectar a nadie.. Entramos en modo sleep
                     #activamos nuevamente el timer adecuado y apagamos los actuales
+                    print("No hay nadie")
                     self.timer_activeUser.stop()
                     self.timer_display.stop()
                     self.setSleepMirrolMode()
@@ -540,7 +539,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.CH3pin,gpio.LOW)
         self.SubirEspejo()
 
-    def actualizarDisplay(self):
+    def actualizar(self):
+        print("actualizamos")
         """Relés"""
         self.estadoS1= "1"==self.perfiles[self.IdUserToShow][2][0]
         self.estadoS2= "1"==self.perfiles[self.IdUserToShow][2][1]
@@ -572,6 +572,10 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.LREDpin,coloresGPIO[idColor][0])
         gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
         gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
+        print("Salimos de actualizar")
+
+    def displayFecha(self):
+        print("Fecha")
         """Fecha"""
         currentFecha = QDate.currentDate()
         dia = currentFecha.toString('dddd')
@@ -580,10 +584,14 @@ class mirrollGUI(QtWidgets.QMainWindow):
         anho = currentFecha.toString('yyyy')
         displayFecha = (dia + ', ' + numero_dia + ' de ' + mes + ' del ' + anho)
         self.ui.fecha.setText(displayFecha)
+        print("outFecha")
+    def displayHora(self):
+        print("Hora")
         """Hora"""
         currentHora = QTime.currentTime()
         displayHora = currentHora.toString('hh:mm')
         self.ui.hora.setText(displayHora)
+        print("outHora")
 
     def ConfigRaspberryGPIO(self):
         #Elegimos el modo de la numeración del chip BCM
