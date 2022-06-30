@@ -1,4 +1,5 @@
 import encodings
+from Control.Motor.controlMotor import BajarEspejo, SubirEspejo
 from MainWindow import Ui_MainWindow
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -37,8 +38,10 @@ usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","us
 #Cargamos el archivo precargado de los faces
 knownEncodings = pickle.loads(open("encodings.pickle", "rb").read())
 #variables globales
-STEPTIME_motor=125/2#en microsegundos
-
+STEPTIME=125/2*1000#en nanosec
+pulsesPerRev=0#200
+distPerRev=1
+PULSES_PER_DIST=pulsesPerRev/distPerRev
 """ //////////////////////////////////////////
     //               Clases                 //
     //////////////////////////////////////////
@@ -638,6 +641,22 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.LREDpin,coloresGPIO[idColor][0])
         gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
         gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
+        """Altura motor"""
+        diffAltura=self.perfiles[self.IdUserToShow][0]-self.actualAltura
+        if diffAltura<0:
+            #Bajamos motor
+            print("bajamos motor")
+            diffAltura=abs(diffAltura)
+            BajarEspejo(diffAltura)
+        elif diffAltura>0:
+            #Subimos motor
+            print("subimos motor")
+            SubirEspejo(diffAltura)
+        else:
+            #mantenemos la altura
+            print("Dejamos la altura")
+        self.actualAltura=self.perfiles[self.IdUserToShow][0]
+
 
     def setColorLeds(self,color):
         #actualizamos el color
@@ -654,12 +673,12 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.CH3pin,gpio.LOW)
         self.SubirEspejo()
    
-    def BajarEspejo(self,altura=-1,STEPTIME=STEPTIME_motor*1000): #STEPTIME debe estar en nanosecs
+    def BajarEspejo(self,distancia=-1): 
         #Habilitamos el driver del motor
         gpio.output(self.ENApin,gpio.LOW)
         #Definimos la dirección
         gpio.output(self.DIRpin,gpio.LOW)
-        if altura==-1:
+        if distancia==-1:
             #Bajamos el espejo hasta sentir el limit switch
             while gpio.input(self.LSDOWNpin)!=0:
                 #Ponemos en HIGH
@@ -676,17 +695,30 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 while time.time_ns()-initTime<STEPTIME:
                     pass
         else:
-            #Bajamos una cierta altura
-            """Es similar al anterior, solo que en vez de un while para checar el limit, se le añade la distanciaa estimada por calculo del factor de pulsos/m"""
-        #Deshabilitamos el driver del motor
+            #Bajamos una cierta altura o hasta sentir el Limit switch
+            for i in range(distancia*PULSES_PER_DIST):
+                #Ponemos en HIGH
+                gpio.output(self.PULpin,gpio.HIGH)        
+                #Esperamos en HIGH
+                initTime=time.time_ns()
+                while time.time_ns()-initTime<STEPTIME:
+                    if gpio.input(self.LSDOWNpin)==0:
+                        break
+                #Ponemos en LOW
+                gpio.output(self.PULpin,gpio.LOW)        
+                #Esperamos en LOW
+                initTime=time.time_ns()
+                while time.time_ns()-initTime<STEPTIME:
+                    if gpio.input(self.LSDOWNpin)==0:
+                        break
         gpio.output(self.ENApin,gpio.HIGH)
     
-    def SubirEspejo(self,altura=-1,STEPTIME=STEPTIME_motor*1000): #STEPTIME debe estar en nanosecs
+    def SubirEspejo(self,distancia=-1): 
         #Habilitamos el driver del motor
         gpio.output(self.ENApin,gpio.LOW)
         #Definimos la dirección
         gpio.output(self.DIRpin,gpio.HIGH)
-        if altura==-1:
+        if distancia==-1:
             #Subimos el espejo hasta sentir el limit switch
             while gpio.input(self.LSUPpin)==0:#notar que se detiene en flanco de subida!
                 #Ponemos en HIGH
@@ -702,8 +734,22 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 while time.time_ns()-initTime<STEPTIME:
                     pass
         else:
-            #Bajamos una cierta altura
-            """Es similar al anterior, solo que en vez de un while para checar el limit, se le añade la distanciaa estimada por calculo del factor de pulsos/m"""
+            #Subimos el espejo una cierta altura o hasta sentir el limit switch
+            for i in range(distancia*PULSES_PER_DIST):
+                #Ponemos en HIGH
+                gpio.output(self.PULpin,gpio.HIGH)        
+                #Esperamos en HIGH
+                initTime=time.time_ns()
+                while time.time_ns()-initTime<STEPTIME:
+                    if gpio.input(self.LSUPpin)!=0:
+                        break
+                #Ponemos en LOW
+                gpio.output(self.PULpin,gpio.LOW)        
+                #Esperamos en LOW
+                initTime=time.time_ns()
+                while time.time_ns()-initTime<STEPTIME:
+                    if gpio.input(self.LSUPpin)!=0:
+                        break
         #Deshabilitamos el driver del motor
         gpio.output(self.ENApin,gpio.HIGH)
 
