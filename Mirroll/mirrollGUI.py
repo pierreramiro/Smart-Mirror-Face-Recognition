@@ -319,9 +319,9 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.initFlag=True
         #Definimos unas variables
         self.maxDistance= 60#maxima distancia en cm
-        self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO
+        self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO en us
         self.minDistance= 30#maxima distancia en cm
-        self.minTimeEcho= self.minDistance*2/0.034
+        self.minTimeEcho= self.minDistance*2/0.034 #en usec
         self.STEPTIME=STEPTIME_motor #En microsegundos
         self.actualAltura=30
         #Configuramos los pines del Raspberry
@@ -369,14 +369,19 @@ class mirrollGUI(QtWidgets.QMainWindow):
         while time.time()<t1+0.00001: #nosotros esperamos hasta 10us
             pass
         gpio.output(self.TRIGpin,gpio.LOW)
-        #Esperamos el echo en HIGH
+        #Esperamos el echo en HIGH o su timeout
+        t_timeout=time.time()+0.020
         while not(gpio.input(self.ECHOpin)):
-            #El echo tiene un timeout y se setea en baja
-            pass
+            #establecemos un timeout de 20ms
+            if time.time()>t_timeout:
+                break
         t1=time.time()
         #Esperamos el echo en flanco de bajada
+        t_timeout=time.time()+self.maxTimeEcho*1.2
         while gpio.input(self.ECHOpin):
-            pass
+            #establecemos un timeout de 1.2 veces el máximo aceptado
+            if time.time()>t_timeout:
+                break
         runnningTime=(time.time()-t1)*1000000
         #Verificamos los rangos para verificar si hay persona en frente
         if runnningTime<self.maxTimeEcho: 
@@ -476,7 +481,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Actualizamos la altura
         # 
     def stillThere(self):
-        print("verificamos boton")
         #Verificamos el boton
         if gpio.input(self.BUTTONpin)==False:
             #Detenemos el sondeo
@@ -486,7 +490,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
             dlg = BT_DialogBox(self)
             dlg.show()
         else:
-            print("primer sensado")
             gpio.output(self.TRIGpin,gpio.HIGH)
             t1=time.time()
             #esperamos a cumplir los 10usec
@@ -494,16 +497,21 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 pass
             gpio.output(self.TRIGpin,gpio.LOW)
             #Esperamos el echo en HIGH
+            t_timeout=time.time()+0.020
             while not(gpio.input(self.ECHOpin)):
-                #El echo tiene un timeout y se setea en baja
-                pass
+                #establecemos un timeout de 20ms
+                if time.time()>t_timeout:
+                    break
             t1=time.time()
             #Esperamos el echo en flanco de bajada
+            t_timeout=time.time()+self.maxTimeEcho*1.2
             while gpio.input(self.ECHOpin):
-                pass
+                #establecemos un timeout de 1.2 veces el máximo aceptado
+                if time.time()>t_timeout:
+                    break
             runnningTime=(time.time()-t1)*1000000
             if runnningTime>self.maxTimeEcho:
-                print("segundo sensado con camara")
+                print("Sensor, no detecta. Verificamos nuevamente y con camara")
                 #Ya no hay persona al frente. Pero verificamos nuevamente
                 """Calculamos nuevamente con el sensor"""
                 time.sleep(1)
@@ -514,13 +522,18 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     pass
                 gpio.output(self.TRIGpin,gpio.LOW)
                 #Esperamos el echo en HIGH
+                t_timeout=time.time()+0.020
                 while not(gpio.input(self.ECHOpin)):
-                    #El echo tiene un timeout y se setea en baja
-                    pass
+                    #establecemos un timeout de 20ms
+                    if time.time()>t_timeout:
+                        break
                 t1=time.time()
                 #Esperamos el echo en flanco de bajada
+                t_timeout=time.time()+self.maxTimeEcho*1.2
                 while gpio.input(self.ECHOpin):
-                    pass
+                    #establecemos un timeout de 1.2 veces el máximo aceptado
+                    if time.time()>t_timeout:
+                        break
                 runnningTime=(time.time()-t1)*1000000
                 """Calculemos con la camara"""
                 #Procedemos a verificar si hay rostro detectado
@@ -549,7 +562,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.SubirEspejo()
 
     def actualizar(self):
-        print("actualizamos")
         """Relés"""
         self.estadoS1= "1"==self.perfiles[self.IdUserToShow][2][0]
         self.estadoS2= "1"==self.perfiles[self.IdUserToShow][2][1]
@@ -581,10 +593,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.LREDpin,coloresGPIO[idColor][0])
         gpio.output(self.LGREENpin,coloresGPIO[idColor][1])
         gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
-        print("Salimos de actualizar")
 
     def displayFecha(self):
-        print("Fecha")
         """Fecha"""
         currentFecha = QDate.currentDate()
         dia = currentFecha.toString('dddd')
@@ -593,14 +603,12 @@ class mirrollGUI(QtWidgets.QMainWindow):
         anho = currentFecha.toString('yyyy')
         displayFecha = (dia + ', ' + numero_dia + ' de ' + mes + ' del ' + anho)
         self.ui.fecha.setText(displayFecha)
-        print("outFecha")
+    
     def displayHora(self):
-        print("Hora")
         """Hora"""
         currentHora = QTime.currentTime()
         displayHora = currentHora.toString('hh:mm')
         self.ui.hora.setText(displayHora)
-        print("outHora")
 
     def ConfigRaspberryGPIO(self):
         #Elegimos el modo de la numeración del chip BCM
