@@ -37,7 +37,7 @@ usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","us
 #Cargamos el archivo precargado de los faces
 knownEncodings = pickle.loads(open("encodings.pickle", "rb").read())
 #variables globales
-STEPTIME=125/2*1000#en nanosec
+STEPTIME=125/4*1000#en nanosec
 pulsesPerRev=0#200
 distPerRev=1
 PULSES_PER_DIST=pulsesPerRev/distPerRev
