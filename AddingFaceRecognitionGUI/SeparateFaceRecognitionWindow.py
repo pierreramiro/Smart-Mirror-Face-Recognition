@@ -9,6 +9,7 @@ class Window(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
         #Ponemos un nombre a la ventana3
+        self.setStyleSheet("background:black")
         self.setWindowTitle("Reconocimiento Facial")
         self.setWindowIcon(QIcon('Resources/RFLogo.png'))
         self.resize(600, 600)

@@ -1,5 +1,4 @@
 import encodings
-from Control.Motor.controlMotor import BajarEspejo, SubirEspejo
 from MainWindow import Ui_MainWindow
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -51,10 +50,12 @@ class BT_DialogBox (QtWidgets.QDialog):
         super(BT_DialogBox,self).__init__(parent)
         #Ponemos un nombre a la ventana
         self.setWindowTitle("Notificación")
+        self.setStyleSheet("background:black")
         #creo el layout de nuestra ventana (vertical)
         self.layout=QtWidgets.QVBoxLayout()
         #Creo el texto a mostrar
         message = QtWidgets.QLabel("Se ha presionado el botón. Recibiendo información Bluetooth")
+        message.setStyleSheet("color: white")
         self.layout.addWidget(message)
         #Creo la imagen
         image = QImage('resources/Bluetooth.jpeg')
@@ -163,13 +164,14 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         parent.AddingNewUser=True
         #Ponemos un nombre a la ventana3
         self.setWindowTitle("Reconocimiento Facial")
+        self.setStyleSheet("background:black")
         self.setWindowIcon(QtGui.QIcon('resources/RFLogo.png'))
         self.resize(600, 600)
         #creo el layout de nuestra ventana (vertical)
         self.layout=QtWidgets.QVBoxLayout()
         #Creo el texto a mostrar
         self.message = QtWidgets.QLabel("Acérquese a la cámara")
-        self.message.setStyleSheet("font: 16pt \"Arial Rounded MT Bold\";")
+        self.message.setStyleSheet("font: 16pt \"Arial Rounded MT Bold\";color:white")
         self.message.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(self.message)
         self.layout.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
@@ -184,7 +186,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         #Creamos unos widgets
         self.imageLabel = QtWidgets.QLabel()
         self.sencondLine = QtWidgets.QLabel("Coloque su rostro como muestra la imagen")   
-        self.sencondLine.setStyleSheet("font: 21pt \"Arial Rounded MT Bold\";")
+        self.sencondLine.setStyleSheet("font: 21pt \"Arial Rounded MT Bold\";color:white")
         self.sencondLine.setAlignment(QtCore.Qt.AlignCenter)
         #Configuramos los timers
         self.timer_one=QTimer()
@@ -329,7 +331,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO en us
         self.minDistance= 30#maxima distancia en cm
         self.minTimeEcho= self.minDistance*2/0.034 #en usec
-        self.STEPTIME=STEPTIME_motor #En microsegundos
         self.actualAltura=30
         #Configuramos los pines del Raspberry
         self.ConfigRaspberryGPIO()
@@ -757,10 +758,17 @@ class mirrollGUI(QtWidgets.QMainWindow):
     //                Main                  //
     //////////////////////////////////////////
 """ 
+stylesheet="""
+    QMainWindow{
+        background:black
+    }
+"""
 def setUpMirrollGUI():
 
     #Creamos la app
     app = QtWidgets.QApplication(sys.argv)  
+    #Colocamos background
+    app.setStyleSheet(stylesheet)
     #Creamos el visualizador, solo la pantalla
     mirrolGUI_window=mirrollGUI()
     mirrolGUI_window.show()                        
