@@ -38,8 +38,8 @@ usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","us
 knownEncodings = pickle.loads(open("encodings.pickle", "rb").read())
 #variables globales
 STEPTIME=125/4*1000#en nanosec
-pulsesPerRev=0#200
-distPerRev=1
+pulsesPerRev=6400#200
+distPerRev=0.4
 PULSES_PER_DIST=pulsesPerRev/distPerRev
 """ //////////////////////////////////////////
     //               Clases                 //
@@ -327,7 +327,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Creamos unas variables flags
         self.initFlag=True
         #Definimos unas variables
-        self.maxDistance= 60#maxima distancia en cm
+        self.maxDistance= 110#maxima distancia en cm
         self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO en us
         self.minDistance= 30#maxima distancia en cm
         self.minTimeEcho= self.minDistance*2/0.034 #en usec
@@ -648,14 +648,14 @@ class mirrollGUI(QtWidgets.QMainWindow):
             #Bajamos motor
             print("bajamos motor")
             diffAltura=abs(diffAltura)
-            #BajarEspejo(diffAltura)
+            self.BajarEspejo(diffAltura)
         elif diffAltura>0:
             #Subimos motor
             print("subimos motor")
-            #SubirEspejo(diffAltura)
+            self.SubirEspejo(diffAltura)
         else:
             #mantenemos la altura
-            print("Dejamos la altura")
+            print("Dejamos la altura",self.actualAltura)
         self.actualAltura=self.perfiles[self.IdUserToShow][0]
 
 
@@ -672,6 +672,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.CH1pin,gpio.LOW)
         gpio.output(self.CH2pin,gpio.LOW)
         gpio.output(self.CH3pin,gpio.LOW)
+        self.actualAltura=30
         self.SubirEspejo()
    
     def BajarEspejo(self,distancia=-1): 
@@ -697,7 +698,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     pass
         else:
             #Bajamos una cierta altura o hasta sentir el Limit switch
-            for i in range(distancia*PULSES_PER_DIST):
+            for i in range(int(distancia*PULSES_PER_DIST)):
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
@@ -736,7 +737,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     pass
         else:
             #Subimos el espejo una cierta altura o hasta sentir el limit switch
-            for i in range(distancia*PULSES_PER_DIST):
+            for i in range(int(distancia*PULSES_PER_DIST)):
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
