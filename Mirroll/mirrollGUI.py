@@ -322,7 +322,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Establecemos info por defecto
         self.fecha_actual="viernes, 10 de junio del 2022"
         self.hora_actual="18:00 pm"
-        self.temperatura_actual="21"
+        self.temperatura_actual="17"
         self.ui.temperatura.setText(self.temperatura_actual)   
         #Creamos unas variables flags
         self.initFlag=True
