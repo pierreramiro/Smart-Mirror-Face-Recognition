@@ -1,9 +1,11 @@
 import sys
 import time
 
-from PyQt5.QtCore import QTimer, QTime, QDate
+from PyQt5.QtCore import QTimer, QTime, QDate,Qt
 from PyQt5.QtGui import QImage,QPixmap
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QPushButton, QVBoxLayout,QLabel
+WIDTH_SCREEN=1920
+HEIGHT_SCREEN=1080
 
 dato=1
 
@@ -13,6 +15,9 @@ class sleepModeDialog(QDialog):
         self.val=val
         #nombre a la ventana
         self.setWindowTitle("Sleep!")
+        self.setWindowFlag(Qt.FramelessWindowHint, True)
+        #Establecemos el tamaño de la pantalla
+        self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
         #Creo un layout
         self.layout = QVBoxLayout()
         # loading image
@@ -70,8 +75,8 @@ class warningBox (QDialog):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        
         self.setWindowTitle("My App")
+        self.setWindowFlag(Qt.FramelessWindowHint, True)
         self.dato=dato
         button = QPushButton("Press me for a dialog!")
         button.clicked.connect(self.button_clicked)

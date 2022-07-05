@@ -6,6 +6,7 @@ from PyQt5.QtCore import QTimer, QTime, QDate
 from PyQt5.QtGui import QImage,QPixmap
 import time
 import csv
+from Mirroll.test import HEIGHT_SCREEN, WIDTH_SCREEN
 #Librería para el control del Raspberry
 import RPi.GPIO as gpio
 import serial #uart
@@ -41,6 +42,9 @@ STEPTIME=125/4*1000#en nanosec
 pulsesPerRev=6400#200
 distPerRev=0.4
 PULSES_PER_DIST=pulsesPerRev/distPerRev
+#Tamaño de la ventana
+WIDTH_SCREEN=1368
+HEIGHT_SCREEN=768
 """ //////////////////////////////////////////
     //               Clases                 //
     //////////////////////////////////////////
@@ -48,9 +52,13 @@ PULSES_PER_DIST=pulsesPerRev/distPerRev
 class sleepModeDialog(QtWidgets.QDialog):
     def __init__(self,parent=None):
         super(sleepModeDialog,self).__init__(parent)
-        #nombre a la ventana
-        self.setWindowTitle("Sleep!")
-        #Creo un layout
+        # Desaparecemos el titleBar
+        self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
+        # Establecemos el tamaño de la pantalla
+        self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
+        # Establecemos el fondo de color negro
+        self.setStyleSheet("background:black")
+        # Creo un layout
         self.layout = QtWidgets.QVBoxLayout()
         # loading image
         image = QImage('resources/RFLogo.png')
@@ -190,8 +198,11 @@ class sleepModeDialog(QtWidgets.QDialog):
 class BT_DialogBox (QtWidgets.QDialog):
     def __init__(self,parent=None):
         super(BT_DialogBox,self).__init__(parent)
-        #Ponemos un nombre a la ventana
-        self.setWindowTitle("Notificación")
+        #Desaparecemos el titleBar
+        self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
+        #Establecemos el tamaño de la pantalla
+        self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
+        #Establecemos el fondo de color negro
         self.setStyleSheet("background:black")
         #creo el layout de nuestra ventana (vertical)
         self.layout=QtWidgets.QVBoxLayout()
@@ -304,16 +315,21 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.child=child
         #añadimos flag
         parent.AddingNewUser=True
-        #Ponemos un nombre a la ventana3
-        self.setWindowTitle("Reconocimiento Facial")
+        #Desaparecemos el titleBar
+        self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
+        #Establecemos el tamaño de la pantalla
+        self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
+        #Establecemos el fondo de color negro
         self.setStyleSheet("background:black")
+        #Colocamos una imagen de BT
         self.setWindowIcon(QtGui.QIcon('resources/RFLogo.png'))
-        self.resize(600, 600)
+        #Establecemos el tamaño
+        self.resize(WIDTH_SCREEN, HEIGHT_SCREEN)
         #creo el layout de nuestra ventana (vertical)
         self.layout=QtWidgets.QVBoxLayout()
         #Creo el texto a mostrar
         self.message = QtWidgets.QLabel("Acérquese a la cámara")
-        self.message.setStyleSheet("font: 16pt \"Arial Rounded MT Bold\";color:white")
+        self.message.setStyleSheet("font: 34pt \"Arial Rounded MT Bold\";color:white")
         self.message.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(self.message)
         self.layout.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
@@ -328,7 +344,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         #Creamos unos widgets
         self.imageLabel = QtWidgets.QLabel()
         self.sencondLine = QtWidgets.QLabel("Coloque su rostro como muestra la imagen")   
-        self.sencondLine.setStyleSheet("font: 21pt \"Arial Rounded MT Bold\";color:white")
+        self.sencondLine.setStyleSheet("font: 42pt \"Arial Rounded MT Bold\";color:white")
         self.sencondLine.setAlignment(QtCore.Qt.AlignCenter)
         #Configuramos los timers
         self.timer_one=QTimer()
@@ -384,8 +400,6 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             faces=[]
             #Verificamos si hay cara en frente de la camara
             while len(faces)==0 and not(self.picTaken):
-                # #añadimos un delay
-                # time.sleep(0.1)
                 #Tomamos una foto
                 cam=cv2.VideoCapture(0)
                 ret,frame=cam.read()
@@ -553,7 +567,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
 
     def initMirror(self):
         self.timer_initMirroll.stop()
-        #ponemos un popup de BT activado
+        #Abrimos la ventana de modo Sleep
         dlg = sleepModeDialog(self)
         dlg.show()
 
