@@ -370,6 +370,8 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         print("Salimos del init FR")
         
     def initMirrolUp(self):
+        #detenemos el timer
+        self.timer_zero.stop()
         self.parent().setColorLeds("blanco")
         self.parent().SubirEspejo()
         print("Limit activado!")
