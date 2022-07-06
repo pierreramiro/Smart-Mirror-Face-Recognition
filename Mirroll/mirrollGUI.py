@@ -6,7 +6,6 @@ from PyQt5.QtCore import QTimer, QTime, QDate
 from PyQt5.QtGui import QImage,QPixmap
 import time
 import csv
-from Mirroll.test import HEIGHT_SCREEN, WIDTH_SCREEN
 #Librería para el control del Raspberry
 import RPi.GPIO as gpio
 import serial #uart
@@ -35,8 +34,6 @@ imagenesFaceRecognition = ['RostroIzq','RostroIzqMID','RostroFrente','RostroDerM
 imagenesProcessing=["Procesando1.png","Procesando2.png","Procesando3.png","Procesando4.png","Procesando5.png","Procesando6.png"]
 #foldar names dataset
 usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","user8","user9"]
-#Cargamos el archivo precargado de los faces
-knownEncodings = []
 #variables globales
 STEPTIME=125/4*1000#en nanosec
 pulsesPerRev=6400
@@ -82,7 +79,7 @@ class sleepModeDialog(QtWidgets.QDialog):
         if self.parent().initialization:
             self.parent().initialization=False
             #Cargamos el enntrenamiento
-            knownEncodings = pickle.loads(open("encodings.pickle", "rb").read())
+            self.parent().knownEncodings = pickle.loads(open("encodings.pickle", "rb").read())
             #Cargamos el archivo guardado con la configuracion de los perfiles
             file=open("userConfig.csv","r")
             reader=csv.reader(file)
@@ -95,9 +92,9 @@ class sleepModeDialog(QtWidgets.QDialog):
             self.parent().perfiles=temp
             #Indicamos el usuario a mostrar y su personalización
             self.parent().IdUserToShow=10#por defecto
-            self.parent().estadoS1= "1"==self.perfiles[self.IdUserToShow][2][0]
-            self.parent().estadoS2= "1"==self.perfiles[self.IdUserToShow][2][1]
-            self.parent().estadoS3= "1"==self.perfiles[self.IdUserToShow][2][2]
+            self.parent().estadoS1= "1"==self.parent().perfiles[self.parent().IdUserToShow][2][0]
+            self.parent().estadoS2= "1"==self.parent().perfiles[self.parent().IdUserToShow][2][1]
+            self.parent().estadoS3= "1"==self.parent().perfiles[self.parent().IdUserToShow][2][2]
             #Configuramos los pines del Raspberry
             self.parent().ConfigRaspberryGPIO()
         #Volvemos a establecer el espejo al tope
@@ -142,19 +139,21 @@ class sleepModeDialog(QtWidgets.QDialog):
             self.parent().setColorLeds("blanco")
             print("distancia:",runnningTime*0.034/2)
             #Verificamos rostro con camara y verificaremos N veces..
-            N_triesOfVerification=5
+            N_triesOfVerification=3
             nPhotosTaken=0
             idUserDetected=[]
+            exitSleepMode=True
+            cam = cv2.VideoCapture(0)
+            #vs = VideoStream(src=0,framerate=10).start()
             while nPhotosTaken<N_triesOfVerification:
                 # Sumamos la cantidad de veces que hemos tomado la foto
                 nPhotosTaken+=1
                 # Tomamos la photo
-                vs = VideoStream(src=0,framerate=10).start()
-                frame=vs.read()
-                #cv2.imwrite("1.jpg",frame)
-                vs.stop()
+                ret, frame = cam.read()
+                #cv2.imwrite(str(nPhotosTaken)+".jpg",frame)
                 # Obtenemos la cara de la foto
                 face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+                print(nPhotosTaken)
                 gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
                 faces=face_cascade.detectMultiScale(gray,1.1,4)
                 # Procedemos a verificar si hay rostro o no
@@ -170,7 +169,7 @@ class sleepModeDialog(QtWidgets.QDialog):
                     idUserMatch=[0]*10
                     #De los encodings obtenidos (rostros calculados), verificamos con los conocidos
                     for encoding in encodings:
-                        for id,dataEncs in enumerate(knownEncodings):
+                        for id,dataEncs in enumerate(self.parent().knownEncodings):
                             #Calculamos la cantidad de aciertos
                             matches=face_recognition.compare_faces(dataEncs,encoding)
                             #Sumamos la cantidad de aciertos
@@ -187,17 +186,21 @@ class sleepModeDialog(QtWidgets.QDialog):
                         print(f"Usuario a mostrar: User{self.parent().IdUserToShow+1}")                    
                 # Si no hay rostro, en las N verificaciones, consideramos que no habia nadie en frente y salimos del while
                 else:
+                    exitSleepMode=False
                     break
-            #De los usuarios detectados, nos quedamos con la moda
-            self.parent().IdUserToShow=int(mode(idUserDetected))
-            #Segun el usuario detectado, configuramos los GPIO
-            self.parent().configureGPIOMirrol()
-            #Detenemos este timer y habilitamos otro que actualizara Fecha, hora, botón, BT, entre otros
-            self.timer_sondeaPresencia.stop()
-            #Salimos del sleep mode y personalizamos!
-            self.close()
-            self.parent().timer_display.start(500)
-            self.parent().timer_activeUser.start(10)
+            #vs.stop()
+            cam.release()
+            if exitSleepMode:
+                #De los usuarios detectados, nos quedamos con la moda
+                self.parent().IdUserToShow=int(mode(idUserDetected))
+                #Segun el usuario detectado, configuramos los GPIO
+                self.parent().configureGPIOMirrol()
+                #Detenemos este timer y habilitamos otro que actualizara Fecha, hora, botón, BT, entre otros
+                self.timer_sondeaPresencia.stop()
+                #Salimos del sleep mode y personalizamos!
+                self.close()
+                self.parent().timer_display.start(500)
+                self.parent().timer_activeUser.start(10)
         # No hay persona ne frente
         else:
             self.parent().setColorLeds("noColor")
@@ -430,7 +433,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             self.timer_two.stop()
             #Guardamos el nuevo pickle
             f = open("encodings.pickle", "wb")
-            f.write(pickle.dumps(knownEncodings))
+            f.write(pickle.dumps(self.parent().knownEncodings))
             f.close()
             #Cerramos la ventana
             self.close()
@@ -451,7 +454,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             # encodings
             tempEncodings.append(encoding)
         #Reemplazamos por los datos que ya teníamos
-        knownEncodings[self.idUser]=tempEncodings
+        self.parent().knownEncodings[self.idUser]=tempEncodings
         #Añadimos ventana de processing
         image=QImage('resources/'+imagenesProcessing[self.countPics%6])
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
