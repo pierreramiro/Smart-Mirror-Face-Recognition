@@ -35,7 +35,7 @@ imagenesProcessing=["Procesando1.png","Procesando2.png","Procesando3.png","Proce
 #foldar names dataset
 usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","user8","user9"]
 #variables globales
-STEPTIME=125/4*1000#en nanosec
+STEPTIME=125000/4#en nanosec
 pulsesPerRev=6400
 distPerRev=0.4
 PULSES_PER_DIST=pulsesPerRev/distPerRev
@@ -61,6 +61,7 @@ class sleepModeDialog(QtWidgets.QDialog):
         image = QImage('resources/RFLogo.png')
         self.imageLabel = QtWidgets.QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
+        self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(self.imageLabel)
         # Configuramos el layout
         self.setLayout(self.layout)
@@ -221,11 +222,13 @@ class BT_DialogBox (QtWidgets.QDialog):
         #Creo el texto a mostrar
         message = QtWidgets.QLabel("Se ha presionado el botón. Recibiendo información Bluetooth")
         message.setStyleSheet("color: white")
+        message.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(message)
         #Creo la imagen
-        image = QImage('resources/Bluetooth.jpeg')
+        image = QImage('resources/Bt.png')
         self.imageLabel = QtWidgets.QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
+        self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(self.imageLabel)
         #Configuramos/actualizamos el layout
         self.setLayout(self.layout)
