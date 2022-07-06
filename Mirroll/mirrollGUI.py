@@ -1,3 +1,4 @@
+from statistics import mode
 from MainWindow import Ui_MainWindow
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -137,61 +138,67 @@ class sleepModeDialog(QtWidgets.QDialog):
         runnningTime=(time.time()-t1)*1000000
         #Verificamos los rangos para verificar si hay persona en frente
         if runnningTime<self.parent().maxTimeEcho: 
-            #Tenemos una persona en frente!. Prendemos luces en blanco
+            #Tenemos algo en frente!. Prendemos luces en blanco.
             self.parent().setColorLeds("blanco")
-            #Verificamos rostro con camara..
             print("distancia:",runnningTime*0.034/2)
-            #Procedemos a verificar si hay rostro detectado
-            vs = VideoStream(src=0,framerate=10).start()
-            frame=vs.read()
-            cv2.imwrite("1.jpg",frame)
-            vs.stop()
-            #Obtenemos la cara de la foto
-            face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-            gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-            faces=face_cascade.detectMultiScale(gray,1.1,4)
-            if len(faces)!=0:
-                
-                
-                #Hay cara! será conocida o desconocidad???
-                boxes = face_recognition.face_locations(frame)
-                frame = imutils.resize(frame, width=500)
-                # Detect the face boxes
-                boxes = face_recognition.face_locations(frame)
-                # compute the facial embeddings for each face bounding box
-                encodings = face_recognition.face_encodings(frame, boxes)
-                #definimos una variable para hallar que usuario tuvo mas match
-                idUserMatch=[0]*10
-                #De los encodings obtenidos (rostros calculados), verificamos con los conocidos
-                for encoding in encodings:
-                    for id,dataEncs in enumerate(knownEncodings):
-                        #Calculamos la cantidad de aciertos
-                        matches=face_recognition.compare_faces(dataEncs,encoding)
-                        #Sumamos la cantidad de aciertos
-                        idUserMatch[id]+=matches.count(True) 
-                #Verificamos si no hubo un match
-                if idUserMatch==[0]*10:
-                    #Configuración por defecto
-                    self.parent().IdUserToShow=10
-                    print(f"Usuario Desconocido")
-                    
+            #Verificamos rostro con camara y verificaremos N veces..
+            N_triesOfVerification=5
+            nPhotosTaken=0
+            idUserDetected=[]
+            while nPhotosTaken<N_triesOfVerification:
+                # Sumamos la cantidad de veces que hemos tomado la foto
+                nPhotosTaken+=1
+                # Tomamos la photo
+                vs = VideoStream(src=0,framerate=10).start()
+                frame=vs.read()
+                #cv2.imwrite("1.jpg",frame)
+                vs.stop()
+                # Obtenemos la cara de la foto
+                face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+                gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+                faces=face_cascade.detectMultiScale(gray,1.1,4)
+                # Procedemos a verificar si hay rostro o no
+                if len(faces)!=0:
+                    #Hay cara! será conocida o desconocidad???
+                    boxes = face_recognition.face_locations(frame)
+                    frame = imutils.resize(frame, width=500)
+                    # Detect the face boxes
+                    boxes = face_recognition.face_locations(frame)
+                    # compute the facial embeddings for each face bounding box
+                    encodings = face_recognition.face_encodings(frame, boxes)
+                    #definimos una variable para hallar que usuario tuvo mas match
+                    idUserMatch=[0]*10
+                    #De los encodings obtenidos (rostros calculados), verificamos con los conocidos
+                    for encoding in encodings:
+                        for id,dataEncs in enumerate(knownEncodings):
+                            #Calculamos la cantidad de aciertos
+                            matches=face_recognition.compare_faces(dataEncs,encoding)
+                            #Sumamos la cantidad de aciertos
+                            idUserMatch[id]+=matches.count(True) 
+                    #Verificamos si no hubo un match
+                    if idUserMatch==[0]*10:
+                        #Configuración por defecto
+                        idUserDetected.append(10)
+                        print(f"Usuario Desconocido")                        
+                    else:
+                        #Configuracion personalizada
+                        #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
+                        idUserDetected.append(idUserMatch.index(max(idUserMatch)))
+                        print(f"Usuario a mostrar: User{self.parent().IdUserToShow+1}")                    
+                # Si no hay rostro, en las N verificaciones, consideramos que no habia nadie en frente y salimos del while
                 else:
-                    #Configuracion personalizada
-                    #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
-                    self.parent().IdUserToShow =idUserMatch.index(max(idUserMatch))
-                    print(f"Usuario a mostrar: User{self.parent().IdUserToShow+1}")
-                
-                
-                #Segun el usuario detectado, configuramos los GPIO
-                self.parent().configureGPIOMirrol()
-                #Detenemos este timer y habilitamos otro que actualizara Fecha, hora, botón, BT, entre otros
-                self.timer_sondeaPresencia.stop()
-                #Salimos del sleep mode y personalizamos!
-                self.close()
-                self.parent().timer_display.start(500)
-                self.parent().timer_activeUser.start(10)
-            #En caso no se haya detectado cara, no hacemos ninguna configuración. 
-            #Seguimos en hibernacion.. probando
+                    break
+            #De los usuarios detectados, nos quedamos con la moda
+            self.parent().IdUserToShow=int(mode(idUserDetected))
+            #Segun el usuario detectado, configuramos los GPIO
+            self.parent().configureGPIOMirrol()
+            #Detenemos este timer y habilitamos otro que actualizara Fecha, hora, botón, BT, entre otros
+            self.timer_sondeaPresencia.stop()
+            #Salimos del sleep mode y personalizamos!
+            self.close()
+            self.parent().timer_display.start(500)
+            self.parent().timer_activeUser.start(10)
+        # No hay persona ne frente
         else:
             self.parent().setColorLeds("noColor")
     def closeEvent(self, event):
