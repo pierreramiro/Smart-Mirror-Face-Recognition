@@ -1,4 +1,3 @@
-import encodings
 from MainWindow import Ui_MainWindow
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -39,7 +38,7 @@ usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","us
 knownEncodings = []
 #variables globales
 STEPTIME=125/4*1000#en nanosec
-pulsesPerRev=6400#200
+pulsesPerRev=6400
 distPerRev=0.4
 PULSES_PER_DIST=pulsesPerRev/distPerRev
 #Tamaño de la ventana
@@ -76,7 +75,7 @@ class sleepModeDialog(QtWidgets.QDialog):
         self.countTimesSondeo=0
 
     def setMirroll(self):
-        #detenoms el timer
+        #detenemos el timer
         self.timer_init.stop()
         #Hacemos el procesamiento y la configuración
         if self.parent().initialization:
@@ -152,8 +151,9 @@ class sleepModeDialog(QtWidgets.QDialog):
             gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
             faces=face_cascade.detectMultiScale(gray,1.1,4)
             if len(faces)!=0:
+                
+                
                 #Hay cara! será conocida o desconocidad???
-                #Salimos del modo sleep
                 boxes = face_recognition.face_locations(frame)
                 frame = imutils.resize(frame, width=500)
                 # Detect the face boxes
@@ -180,6 +180,8 @@ class sleepModeDialog(QtWidgets.QDialog):
                     #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
                     self.parent().IdUserToShow =idUserMatch.index(max(idUserMatch))
                     print(f"Usuario a mostrar: User{self.parent().IdUserToShow+1}")
+                
+                
                 #Segun el usuario detectado, configuramos los GPIO
                 self.parent().configureGPIOMirrol()
                 #Detenemos este timer y habilitamos otro que actualizara Fecha, hora, botón, BT, entre otros
@@ -470,22 +472,19 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Definimos unas variables
         self.maxDistance= 110#maxima distancia en cm
         self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO en us
-        self.minDistance= 30#maxima distancia en cm
+        self.minDistance= 30#minima distancia en cm
         self.minTimeEcho= self.minDistance*2/0.034 #en usec
         self.actualAltura=30
         self.countTimesSondeoBoton=0
         """Creamos distintos timer que realizarán un sondeo (Poll), actualizarán datos, checar{a el sleep entre otros"""
-        #Timer para inicio de Mirroll
+        # Timer para inicio de Mirroll
         self.timer_initMirroll= QTimer(self)
         self.timer_initMirroll.timeout.connect(self.initMirror)
         self.timer_initMirroll.start(10)
-        #Creamos el timer para sondear presencia de usuarios
-        self.timer_sondeaPresencia=QTimer(self)
-        self.timer_sondeaPresencia.timeout.connect(self.sondeaPresencia)
-        #Creamos el timer cuando se tiene un usuario activo
+        # Creamos el timer cuando se tiene un usuario activo
         self.timer_activeUser=QTimer(self)
         self.timer_activeUser.timeout.connect(self.activeUser)
-        #Timer que actualiza los display de la GUI cuando se tiene al usuario activo
+        # Timer que actualiza los display de la GUI cuando se tiene al usuario activo
         self.timer_display=QTimer(self)
         self.timer_display.timeout.connect(self.displayFecha)
         self.timer_display.timeout.connect(self.displayHora) 
