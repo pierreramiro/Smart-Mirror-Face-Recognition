@@ -348,6 +348,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.setLayout(self.layout)
         #seteando variables
         self.idUser=idUser
+        parent.IdUserToShow=idUser
         self.frames=[]
         self.countPics=0
         self.picTaken=False
@@ -359,14 +360,23 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.sencondLine.setStyleSheet("font: 42pt \"Arial Rounded MT Bold\";color:white")
         self.sencondLine.setAlignment(QtCore.Qt.AlignCenter)
         #Configuramos los timers
+        self.timer_zero=QTimer()
+        self.timer_zero.timeout.connect(self.initMirrolUp)
+        self.timer_zero.start(800)
         self.timer_one=QTimer()
         self.timer_one.timeout.connect(self.takePicsNewUser)
         self.timer_two=QTimer()
         self.timer_two.timeout.connect(self.processPicsNewUser)
-        #Iniciamos los timer
-        self.timer_one.start(800)
         print("Salimos del init FR")
         
+    def initMirrolUp(self):
+        self.parent().setColorLeds("blanco")
+        self.parent().SubirEspejo()
+        print("Limit activado!")
+        self.parent().actualAltura=30
+        #Iniciamos los timer
+        self.timer_one.start(800)        
+
     def takePicsNewUser(self):
         print("Tomamos foto")
         if self.countPics==self.maxNumbersPics:
@@ -437,6 +447,8 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             f.close()
             #Cerramos la ventana
             self.close()
+            #Segun el usuario detectado, configuramos los GPIO
+            self.parent().configureGPIOMirrol()
         """Realizamos el procesamiento"""
         frame=self.frames[self.countPics]
         #Lo pasamos a rgb
