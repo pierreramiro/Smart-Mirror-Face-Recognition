@@ -17,6 +17,13 @@ import face_recognition
 import pickle
 from imutils.video import VideoStream
 import imutils
+#Variable globales para la temperatura
+import requests
+BASE_URL = "https://api.openweathermap.org/data/2.5/weather?"
+CITY = "Lima"
+API_KEY = "29244f2262bb6898c19715b2ae7ca9dc"
+# upadting the URL
+URL = BASE_URL + "q=" + CITY + "&appid=" + API_KEY
 
 #Variables globales
 noColor=[gpio.LOW,gpio.LOW,gpio.LOW]
@@ -193,6 +200,7 @@ class sleepModeDialog(QtWidgets.QDialog):
             cam.release()
             if exitSleepMode:
                 #De los usuarios detectados, nos quedamos con la moda
+                print("Usuarios detectados:",idUserDetected)
                 self.parent().IdUserToShow=int(mode(idUserDetected))
                 #Segun el usuario detectado, configuramos los GPIO
                 self.parent().configureGPIOMirrol()
@@ -492,7 +500,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Establecemos info por defecto
         self.fecha_actual="viernes, 10 de junio del 2022"
         self.hora_actual="18:00 pm"
-        self.temperatura_actual="17"
+        self.temperatura_actual="00"
         self.ui.temperatura.setText(self.temperatura_actual)   
         #Creamos unas variables flags
         self.initialization=True
@@ -513,8 +521,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.timer_activeUser.timeout.connect(self.activeUser)
         # Timer que actualiza los display de la GUI cuando se tiene al usuario activo
         self.timer_display=QTimer(self)
-        self.timer_display.timeout.connect(self.displayFecha)
-        self.timer_display.timeout.connect(self.displayHora) 
+        self.timer_display.timeout.connect(self.displayFechayHora)
+        self.timer_display.timeout.connect(self.displayTemperatura) 
         
     """##################################"""
     """Establecemos los métodos/funciones"""
@@ -684,7 +692,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     dlg = sleepModeDialog(self)
                     dlg.show()
     
-    def displayFecha(self):
+    def displayFechayHora(self):
         """Fecha"""
         currentFecha = QDate.currentDate()
         dia = currentFecha.toString('dddd')
@@ -693,12 +701,25 @@ class mirrollGUI(QtWidgets.QMainWindow):
         anho = currentFecha.toString('yyyy')
         displayFecha = (dia + ', ' + numero_dia + ' de ' + mes + ' del ' + anho)
         self.ui.fecha.setText(displayFecha)
-    
-    def displayHora(self):
         """Hora"""
         currentHora = QTime.currentTime()
         displayHora = currentHora.toString('hh:mm')
         self.ui.hora.setText(displayHora)
+    
+    def displayTemperatura(self):
+        response = requests.get(URL)
+        # checking the status code of the request
+        if response.status_code == 200:
+            # getting data in the json format
+            data = response.json()
+            # getting the main dict block
+            main = data['main']
+            # getting temperature in string type
+            temperature = str(int(main['temp']-273))
+            # set value of temperature of Lima 
+            self.ui.temperatura.setText(temperature)
+            # also, print for debug
+            print("Temperature in Lima: "+temperature)
 
     def configureGPIOMirrol(self):
         """Relés"""
