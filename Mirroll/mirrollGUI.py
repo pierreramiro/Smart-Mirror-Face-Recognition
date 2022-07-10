@@ -146,6 +146,7 @@ class sleepModeDialog(QtWidgets.QDialog):
             exitSleepMode=True
             cam = cv2.VideoCapture(0)
             #vs = VideoStream(src=0,framerate=10).start()
+            face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
             while nPhotosTaken<N_triesOfVerification:
                 # Sumamos la cantidad de veces que hemos tomado la foto
                 nPhotosTaken+=1
@@ -153,14 +154,13 @@ class sleepModeDialog(QtWidgets.QDialog):
                 ret, frame = cam.read()
                 #cv2.imwrite(str(nPhotosTaken)+".jpg",frame)
                 # Obtenemos la cara de la foto
-                face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
                 print(nPhotosTaken)
                 gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
                 faces=face_cascade.detectMultiScale(gray,1.1,4)
                 # Procedemos a verificar si hay rostro o no
                 if len(faces)!=0:
                     #Hay cara! será conocida o desconocidad???
-                    boxes = face_recognition.face_locations(frame)
+                    #boxes = face_recognition.face_locations(frame)
                     frame = imutils.resize(frame, width=500)
                     # Detect the face boxes
                     boxes = face_recognition.face_locations(frame)
