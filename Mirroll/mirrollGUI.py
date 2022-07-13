@@ -47,8 +47,8 @@ pulsesPerRev=6400
 distPerRev=0.4
 PULSES_PER_DIST=pulsesPerRev/distPerRev
 #Tamaño de la ventana
-WIDTH_SCREEN=1368
-HEIGHT_SCREEN=768
+WIDTH_SCREEN=1920
+HEIGHT_SCREEN=1080
 """ //////////////////////////////////////////
     //               Clases                 //
     //////////////////////////////////////////
