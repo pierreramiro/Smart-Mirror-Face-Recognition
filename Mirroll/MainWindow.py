@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         #Desaparecemos el titleBar
         MainWindow.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1368, 768)
+        MainWindow.resize(WIDTH_SCREEN, HEIGHT_SCREEN)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.widget = QtWidgets.QWidget(self.centralwidget)
