@@ -162,7 +162,7 @@ class sleepModeDialog(QtWidgets.QDialog):
                 ret, frame = cam.read()
                 #cv2.imwrite(str(nPhotosTaken)+".jpg",frame)
                 # Obtenemos la cara de la foto
-                print(nPhotosTaken)
+                print("Fotos tomadas",nPhotosTaken)
                 gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
                 faces=face_cascade.detectMultiScale(gray,1.1,4)
                 # Procedemos a verificar si hay rostro o no
@@ -195,6 +195,7 @@ class sleepModeDialog(QtWidgets.QDialog):
                         print(f"Usuario a mostrar: User{self.parent().IdUserToShow+1}")                    
                 # Si no hay rostro, en las N verificaciones, consideramos que no habia nadie en frente y salimos del while
                 else:
+                    print("No hay rostro detectado por la camara")
                     exitSleepMode=False
                     break
             #vs.stop()
@@ -214,6 +215,7 @@ class sleepModeDialog(QtWidgets.QDialog):
         # No hay persona ne frente
         else:
             self.parent().setColorLeds("noColor")
+    
     def closeEvent(self, event):
         event.accept()
 
@@ -265,7 +267,7 @@ class BT_DialogBox (QtWidgets.QDialog):
             #Esto lo hacemos para asegurar los tiempos entre timeouts
             self.timer_Datos.stop()
             #Decodificamos data
-            print(received_data)
+            print("received data: ",received_data)
             received_data=eval(received_data.decode())
             #Con el primer elemento podemos revisar que función aplicamos
             if received_data[0]==0:
