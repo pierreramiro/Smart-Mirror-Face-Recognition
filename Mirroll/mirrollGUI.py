@@ -1,6 +1,4 @@
-from statistics import mode
 from MainWindow import Ui_MainWindow
-import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer, QTime, QDate
 from PyQt5.QtGui import QImage,QPixmap
@@ -13,10 +11,12 @@ gpio.setwarnings(False)
 
 #Libreria para face recognition
 import cv2
-import face_recognition
+from face_recognition import face_encodings as FR_face_encodings
+from face_recognition import face_locations as FR_face_locations
+from face_recognition import compare_faces as FR_compare_faces
 import pickle
 from imutils.video import VideoStream
-import imutils
+from imutils import resize as imResize
 #Variable globales para la temperatura
 import requests
 BASE_URL = "https://api.openweathermap.org/data/2.5/weather?"
@@ -26,14 +26,14 @@ API_KEY = "29244f2262bb6898c19715b2ae7ca9dc"
 URL = BASE_URL + "q=" + CITY + "&appid=" + API_KEY
 
 #Variables globales
-noColor=[gpio.LOW,gpio.LOW,gpio.LOW]
-rojo=[gpio.LOW,gpio.HIGH,gpio.LOW]
-verde=[gpio.HIGH,gpio.LOW,gpio.LOW]
-azul=[gpio.LOW,gpio.LOW,gpio.HIGH]
-amarillo=[gpio.HIGH,gpio.HIGH,gpio.LOW]
-cian=[gpio.HIGH,gpio.LOW,gpio.HIGH]
-rosado=[gpio.LOW,gpio.HIGH,gpio.HIGH]
-blanco=[gpio.HIGH,gpio.HIGH,gpio.HIGH]
+noColor=[False,False,False]# noColor=[gpio.LOW,gpio.LOW,gpio.LOW]
+rojo=[False,True,False]# rojo=[gpio.LOW,gpio.HIGH,gpio.LOW]
+verde=[True,False,False]# verde=[gpio.HIGH,gpio.LOW,gpio.LOW]
+azul=[False,False,True]# azul=[gpio.LOW,gpio.LOW,gpio.HIGH]
+amarillo=[True,True,False]# amarillo=[gpio.HIGH,gpio.HIGH,gpio.LOW]
+cian=[True,False,True]# cian=[gpio.HIGH,gpio.LOW,gpio.HIGH]
+rosado=[False,True,True]# rosado=[gpio.LOW,gpio.HIGH,gpio.HIGH]
+blanco=[True,True,True]# blanco=[gpio.HIGH,gpio.HIGH,gpio.HIGH]
 colores=["noColor","rojo","verde","azul","amarillo","cian","rosado","blanco"]
 coloresGPIO=[noColor,rojo,verde,azul,amarillo,cian,rosado,blanco]
 #Face Recog resources
@@ -169,18 +169,18 @@ class sleepModeDialog(QtWidgets.QDialog):
                 if len(faces)!=0:
                     #Hay cara! será conocida o desconocidad???
                     #boxes = face_recognition.face_locations(frame)
-                    frame = imutils.resize(frame, width=500)
+                    frame = imResize(frame, width=500)
                     # Detect the face boxes
-                    boxes = face_recognition.face_locations(frame)
+                    boxes = FR_face_locations(frame)
                     # compute the facial embeddings for each face bounding box
-                    encodings = face_recognition.face_encodings(frame, boxes)
+                    encodings = FR_face_encodings(frame, boxes)
                     #definimos una variable para hallar que usuario tuvo mas match
                     idUserMatch=[0]*10
                     #De los encodings obtenidos (rostros calculados), verificamos con los conocidos
                     for encoding in encodings:
                         for id,dataEncs in enumerate(self.parent().knownEncodings):
                             #Calculamos la cantidad de aciertos
-                            matches=face_recognition.compare_faces(dataEncs,encoding)
+                            matches=FR_compare_faces(dataEncs,encoding)
                             #Sumamos la cantidad de aciertos
                             idUserMatch[id]+=matches.count(True) 
                     #Verificamos si no hubo un match
@@ -203,6 +203,7 @@ class sleepModeDialog(QtWidgets.QDialog):
             if exitSleepMode:
                 #De los usuarios detectados, nos quedamos con la moda
                 print("Usuarios detectados:",idUserDetected)
+                from statistics import mode 
                 self.parent().IdUserToShow=int(mode(idUserDetected))
                 #Segun el usuario detectado, configuramos los GPIO
                 self.parent().configureGPIOMirrol()
@@ -476,9 +477,9 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         #Guardamos la imagen
         cv2.imwrite("dataset/User"+str(self.idUser)+"/image"+str(self.countPics)+".png",frame)
         #detectamos los rostros boxes
-        boxes = face_recognition.face_locations(rgb,model="hog") #Se escoge el modelo hog
+        boxes = FR_face_locations(rgb,model="hog") #Se escoge el modelo hog
         #obtenemos los encodings
-        encodings = face_recognition.face_encodings(rgb, boxes)
+        encodings = FR_face_encodings(rgb, boxes)
         # loop over the encodings
         tempEncodings=[]
         for encoding in encodings:
@@ -876,7 +877,7 @@ stylesheet="""
     }
 """
 def setUpMirrollGUI():
-
+    import sys
     #Creamos la app
     app = QtWidgets.QApplication(sys.argv)  
     #Colocamos background
