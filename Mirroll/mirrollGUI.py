@@ -615,7 +615,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
             #ponemos un popup de BT activado
             dlg = BT_DialogBox(self)
             dlg.show()
-        if self.countTimesSondeoBoton==10:
+        if self.countTimesSondeoBoton==150:
             self.countTimesSondeoBoton=0
             gpio.output(self.TRIGpin,gpio.HIGH)
             t1=time.time()
@@ -643,6 +643,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 """Calculamos nuevamente con el sensor y verificamos botón"""
                 #Haacemos una espera de 1 segundo
                 temp_t=time.time()+1
+                #Mientras, verificamos si se presiona el boton
                 while time.time()<temp_t:
                     if gpio.input(self.BUTTONpin)==False:
                         #Detenemos el sondeo
