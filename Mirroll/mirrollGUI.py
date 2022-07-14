@@ -66,6 +66,7 @@ class sleepModeDialog(QtWidgets.QDialog):
         self.layout = QtWidgets.QVBoxLayout()
         # loading image
         image = QImage('resources/RFLogo.png')
+        image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
         self.imageLabel = QtWidgets.QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
         self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -234,6 +235,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         self.layout.addWidget(message)
         #Creo la imagen
         image = QImage('resources/Bt.png')
+        image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
         self.imageLabel = QtWidgets.QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
         self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -406,6 +408,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
                     #Pedimos al usuario una nueva pose
                     time.sleep(0.5)
                     image=QImage('resources/'+imagenesFaceRecognition[self.countPics%6]+'.png')
+                    image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
                     self.imageLabel.setPixmap(QPixmap.fromImage(image))
                     self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
                     self.setLayout(self.layout)
@@ -416,6 +419,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
                 else:
                     #Efecto de que se tomo una foto
                     image=QImage('resources/CamP.png')
+                    image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
                     self.imageLabel.setPixmap(QPixmap.fromImage(image))
                     self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
                     self.setLayout(self.layout)#añadimos la imagen
@@ -423,6 +427,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             else:
                 #Esta es la primera vez
                 image=QImage('resources/'+imagenesFaceRecognition[self.countPics%6]+'.png')
+                image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
                 self.imageLabel.setPixmap(QPixmap.fromImage(image))
                 self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
                 self.layout.addWidget(self.sencondLine)
@@ -482,6 +487,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.parent().knownEncodings[self.idUser]=tempEncodings
         #Añadimos ventana de processing
         image=QImage('resources/'+imagenesProcessing[self.countPics%6])
+        image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
         self.setLayout(self.layout)    
         #aumentamos el contador
