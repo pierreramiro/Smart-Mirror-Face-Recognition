@@ -1,5 +1,5 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-import sys
+# from PyQt5 import QtCore, QtGui, QtWidgets
+# import sys
 #import Windows2
 import mirrollGUI
 if __name__ == "__main__":
