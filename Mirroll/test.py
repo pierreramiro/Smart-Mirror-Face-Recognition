@@ -21,9 +21,11 @@ class sleepModeDialog(QDialog):
         #Creo un layout
         self.layout = QVBoxLayout()
         # loading image
-        image = QImage('resources/RFLogo.png')
+        image = QImage('resources/Bt.png')
+        image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), Qt.KeepAspectRatio)
         self.imageLabel = QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
+        self.imageLabel.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.imageLabel)
         # Configuramos el layout
         self.setLayout(self.layout)
@@ -34,7 +36,7 @@ class sleepModeDialog(QDialog):
 
     def initClass(self):
         self.timer.stop()
-        for i in range(5):
+        for i in range(2):
             time.sleep(1)
             print("Tiempo transcurrido:",i)
         time.sleep(1)
