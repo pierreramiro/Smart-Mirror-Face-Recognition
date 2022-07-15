@@ -3,7 +3,7 @@
 import RPi.GPIO as gpio
 import time
 
-def SubirEspejo(altura=-1,STEPTIME=125/4*1000): #STEPTIME debe estar en nanosecs
+def SubirEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
     #Habilitamos el driver del motor
     gpio.output(ENApin,gpio.LOW)
     #Definimos la dirección
@@ -31,7 +31,7 @@ def SubirEspejo(altura=-1,STEPTIME=125/4*1000): #STEPTIME debe estar en nanosecs
     gpio.output(ENApin,gpio.HIGH)
 
 
-def BajarEspejo(altura=-1,STEPTIME=125/4*1000): #STEPTIME debe estar en nanosecs
+def BajarEspejo(altura=-1,STEPTIME=125/2*1000): #STEPTIME debe estar en nanosecs
     #Habilitamos el driver del motor
     gpio.output(ENApin,gpio.LOW)
     #Definimos la dirección
