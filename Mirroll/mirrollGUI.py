@@ -111,9 +111,9 @@ class sleepModeDialog(QtWidgets.QDialog):
         print("Limit activado!")
         #Procedemos a entrar al modo sleep!
         self.parent().setColorLeds("noColor")
-        gpio.output(self.parent().CH1pin,gpio.LOW)
-        gpio.output(self.parent().CH2pin,gpio.LOW)
-        gpio.output(self.parent().CH3pin,gpio.LOW)
+        gpio.output(self.parent().CH1pin,gpio.HIGH)
+        gpio.output(self.parent().CH2pin,gpio.HIGH)
+        gpio.output(self.parent().CH3pin,gpio.HIGH)
         self.parent().actualAltura=30
         self.parent().SubirEspejo()
         #Empezamos a sondear presencia
@@ -234,6 +234,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         self.layout=QtWidgets.QVBoxLayout()
         #Creo el texto a mostrar
         message = QtWidgets.QLabel("Se ha presionado el botón. Recibiendo información Bluetooth")
+        message.setStyleSheet("font: 34pt \"Arial Rounded MT Bold\";color:white")
         message.setStyleSheet("color: white")
         message.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(message)
@@ -370,7 +371,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.countPics=0
         self.picTaken=False
         self.ponerNuevaPose=True
-        self.maxNumbersPics=6
+        self.maxNumbersPics=12
         #Creamos unos widgets
         self.imageLabel = QtWidgets.QLabel()
         self.sencondLine = QtWidgets.QLabel("Coloque su rostro como muestra la imagen")   
@@ -558,16 +559,16 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(21,gpio.HIGH)
         ######## CONTROL CARGAS #######
         self.CH1pin=10
-        self.CH2pin=9     
-        self.CH3pin=11
+        self.CH2pin=11    
+        self.CH3pin=9
         #Configuramos como salidas
         gpio.setup(self.CH1pin,gpio.OUT)
         gpio.setup(self.CH2pin,gpio.OUT)
         gpio.setup(self.CH3pin,gpio.OUT)
-        #Configuramos todo en LOW
-        gpio.output(self.CH1pin,gpio.LOW)
-        gpio.output(self.CH2pin,gpio.LOW)
-        gpio.output(self.CH3pin,gpio.LOW)
+        #Configuramos todo en 
+        gpio.output(self.CH1pin,gpio.HIGH)
+        gpio.output(self.CH2pin,gpio.HIGH)
+        gpio.output(self.CH3pin,gpio.HIGH)
         
         ######## ENTRADAS LIMITS SWITCH #######
         """Ojo, el pin 5 no tiene pullup.. asi que usamos el pin3 como una fuente de 3.3v"""
@@ -745,23 +746,23 @@ class mirrollGUI(QtWidgets.QMainWindow):
         if self.estadoS1 == False:
             #Hacemos la impresion que se tiene ha soltado el botón
             self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
-            gpio.output(self.CH1pin,gpio.LOW)        
+            gpio.output(self.CH1pin,gpio.HIGH)        
         else:
             #Hacemos la impresion que se tiene presionado el botón
             self.ui.botonS1.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
-            gpio.output(self.CH1pin,gpio.HIGH)
+            gpio.output(self.CH1pin,gpio.LOW)
         if self.estadoS2 == False:
-            gpio.output(self.CH2pin,gpio.LOW)
+            gpio.output(self.CH2pin,gpio.HIGH)
             self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
         else:
-            gpio.output(self.CH2pin,gpio.HIGH)
+            gpio.output(self.CH2pin,gpio.LOW)
             self.ui.botonS2.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
             
         if self.estadoS3 == False:
             self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color: rgb(204, 204, 204)")
-            gpio.output(self.CH3pin,gpio.LOW)
-        else:
             gpio.output(self.CH3pin,gpio.HIGH)
+        else:
+            gpio.output(self.CH3pin,gpio.LOW)
             self.ui.botonS3.setStyleSheet("border-radius: 9px;\nbackground-color:rgb(216, 248, 232)")
         """Color"""
         idColor=self.perfiles[self.IdUserToShow][1]
