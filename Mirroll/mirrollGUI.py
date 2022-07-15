@@ -222,6 +222,7 @@ class sleepModeDialog(QtWidgets.QDialog):
 
 class BT_DialogBox (QtWidgets.QDialog):
     def __init__(self,parent=None):
+        print("entramos init BT dialog")
         super(BT_DialogBox,self).__init__(parent)
         #Desaparecemos el titleBar
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
@@ -621,6 +622,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
             #Detenemos el sondeo
             print("Button pressed")
             self.timer_activeUser.stop()
+            self.timer_display.stop()
             #ponemos un popup de BT activado
             dlg = BT_DialogBox(self)
             dlg.show()
@@ -646,6 +648,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 if time.time()>t_timeout:
                     break
             runnningTime=(time.time()-t1)*1000000
+            print(runnningTime)
             if runnningTime>self.maxTimeEcho:
                 print("Sensor, no detecta. Verificamos nuevamente y con camara")
                 #Ya no hay persona al frente. Pero verificamos nuevamente
@@ -657,6 +660,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     if gpio.input(self.BUTTONpin)==False:
                         #Detenemos el sondeo
                         print("Button pressed")
+                        self.timer_display.stop()
                         self.timer_activeUser.stop()
                         #ponemos un popup de BT activado
                         dlg = BT_DialogBox(self)
@@ -683,6 +687,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     if time.time()>t_timeout:
                         break
                 runnningTime=(time.time()-t1)*1000000
+                print(runnningTime)
                 """Calculemos con la camara"""
                 #Procedemos a verificar si hay rostro detectado
                 vs = VideoStream(src=0,framerate=10).start()
@@ -729,7 +734,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
             # set value of temperature of Lima 
             self.ui.temperatura.setText(temperature)
             # also, print for debug
-            print("Temperature in Lima: "+temperature)
+            #print("Temperature in Lima: "+temperature)
 
     def configureGPIOMirrol(self):
         """Relés"""
