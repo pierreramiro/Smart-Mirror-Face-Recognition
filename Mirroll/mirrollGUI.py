@@ -241,7 +241,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         self.layout=QtWidgets.QVBoxLayout()
         #Creo el texto a mostrar
         message = QtWidgets.QLabel("Se ha presionado el botón. Recibiendo información Bluetooth")
-        message.setStyleSheet("font: 34pt \"Arial Rounded MT Bold\";color:white")
+        message.setStyleSheet("font: 48pt \"Arial Rounded MT Bold\";color:white")
         message.setStyleSheet("color: white")
         message.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(message)
