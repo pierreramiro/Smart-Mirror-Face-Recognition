@@ -49,7 +49,8 @@ PULSES_PER_DIST=pulsesPerRev/distPerRev
 #Tamaño de la ventana
 WIDTH_SCREEN=1920
 HEIGHT_SCREEN=1080
-
+#max altura
+MAXIMA_ALTURA_ESPEJO=20
 
 """ //////////////////////////////////////////
     //               Clases                 //
@@ -96,10 +97,13 @@ class sleepModeDialog(QtWidgets.QDialog):
             reader=csv.reader(file)
             temp=[]
             for row in reader:
-                temp.append([float(row[0]),int(row[1]),row[2]]) # formato [altura,idColor,binData]
+                if float(row[0])>MAXIMA_ALTURA_ESPEJO:
+                    temp.append([MAXIMA_ALTURA_ESPEJO,int(row[1]),row[2]]) # formato [altura,idColor,binData]
+                else:
+                    temp.append([float(row[0]),int(row[1]),row[2]]) # formato [altura,idColor,binData]
             file.close()
             #Definimos el perfil 10 que será el usuario por defecto (no tiene configuracion)
-            temp.append([30,7,"001"])
+            temp.append([MAXIMA_ALTURA_ESPEJO,7,"001"])
             self.parent().perfiles=temp
             #Indicamos el usuario a mostrar y su personalización
             self.parent().IdUserToShow=10#por defecto
@@ -116,7 +120,7 @@ class sleepModeDialog(QtWidgets.QDialog):
         gpio.output(self.parent().CH1pin,gpio.HIGH)
         gpio.output(self.parent().CH2pin,gpio.HIGH)
         gpio.output(self.parent().CH3pin,gpio.HIGH)
-        self.parent().actualAltura=30
+        self.parent().actualAltura=MAXIMA_ALTURA_ESPEJO
         self.parent().SubirEspejo()
         #Empezamos a sondear presencia
         self.timer_sondeaPresencia.start(500) 
@@ -303,6 +307,8 @@ class BT_DialogBox (QtWidgets.QDialog):
                 color=received_data[2]
                 BINtomacorrientes=str(received_data[3])
                 altura=received_data[4]
+                if altura>MAXIMA_ALTURA_ESPEJO:
+                    altura=MAXIMA_ALTURA_ESPEJO
                 print("El usuario: ",idUser,"tiene color: ", color,"se activan:",BINtomacorrientes,"y altura:",altura)
                 parent=self.parent()
                 #obtengo el usuario que se va a mostrar
@@ -395,7 +401,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.parent().setColorLeds("blanco")
         self.parent().SubirEspejo()
         print("Limit activado!")
-        self.parent().actualAltura=30
+        self.parent().actualAltura=MAXIMA_ALTURA_ESPEJO
         #Iniciamos los timer
         self.timer_one.start(800)        
 
@@ -518,11 +524,11 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Creamos unas variables flags
         self.initialization=True
         #Definimos unas variables
-        self.maxDistance= 110#maxima distancia en cm
+        self.maxDistance= 110#maxima distancia en cm del sensor
         self.maxTimeEcho= self.maxDistance*2/0.034  #Calculamos el tiempo máximo aceptado por el ECHO en us
-        self.minDistance= 30#minima distancia en cm
+        self.minDistance= 30#minima distancia en cm del sensor
         self.minTimeEcho= self.minDistance*2/0.034 #en usec
-        self.actualAltura=30
+        self.actualAltura=MAXIMA_ALTURA_ESPEJO
         self.countTimesSondeoBoton=0
         """Creamos distintos timer que realizarán un sondeo (Poll), actualizarán datos, checar{a el sleep entre otros"""
         # Timer para inicio de Mirroll
