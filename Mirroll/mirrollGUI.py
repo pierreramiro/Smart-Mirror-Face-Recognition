@@ -42,13 +42,15 @@ imagenesProcessing=["Procesando1.png","Procesando2.png","Procesando3.png","Proce
 #foldar names dataset
 usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","user8","user9"]
 #variables globales
-STEPTIME=125000/4#en nanosec
-pulsesPerRev=6400
-distPerRev=0.4
+STEPTIME=125000/2#en nanosec #Se tiene una velocidad de 2cm/seg
+pulsesPerRev=1600 #con 3.5A
+distPerRev=0.515 #en cm
 PULSES_PER_DIST=pulsesPerRev/distPerRev
 #Tamaño de la ventana
 WIDTH_SCREEN=1920
 HEIGHT_SCREEN=1080
+
+
 """ //////////////////////////////////////////
     //               Clases                 //
     //////////////////////////////////////////

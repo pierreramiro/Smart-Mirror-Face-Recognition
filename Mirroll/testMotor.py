@@ -2,8 +2,8 @@
 #Importamos libreras
 import RPi.GPIO as gpio
 import time
-STEPTIME=125000/2 #en microsegundos
-#STEPTIME=15000 #en microsegundos
+STEPTIME=125000/2 #en nanosegundos
+#STEPTIME=15000 #en nanosegundos
 pulsesPerRev=1600 #3.5A
 distPerRev=0.515 #En cm
 PULSES_PER_DIST=pulsesPerRev/distPerRev
