@@ -7,6 +7,47 @@ pulsesPerRev=6400
 distPerRev=0.4
 PULSES_PER_DIST=pulsesPerRev/distPerRev
 
+
+def Subir10Rev():
+    #Habilitamos el driver del motor
+    gpio.output(ENApin,gpio.LOW)
+    #Definimos la dirección
+    gpio.output(DIRpin,gpio.HIGH)
+    for i in range(10):    
+        #Ponemos en HIGH
+        gpio.output(PULpin,gpio.HIGH)        
+        #Esperamos en HIGH
+        initTime=time.time_ns()
+        while time.time_ns()-initTime<STEPTIME:
+            pass
+        #Ponemos en LOW
+        gpio.output(PULpin,gpio.LOW)        
+        #Esperamos en LOW
+        initTime=time.time_ns()
+        while time.time_ns()-initTime<STEPTIME:
+            pass
+
+def Bajar10Rev():
+    #Habilitamos el driver del motor
+    gpio.output(ENApin,gpio.LOW)
+    #Definimos la dirección
+    gpio.output(DIRpin,gpio.LOW)
+    for i in range(10):  
+        #Ponemos en HIGH
+        gpio.output(PULpin,gpio.HIGH)        
+        #Esperamos en HIGH
+        initTime=time.time_ns()
+        while time.time_ns()-initTime<STEPTIME:
+            pass
+
+        #Ponemos en LOW
+        gpio.output(PULpin,gpio.LOW)        
+        #Esperamos en LOW
+        initTime=time.time_ns()
+        while time.time_ns()-initTime<STEPTIME:
+            pass
+
+
 def SubirEspejo(distancia=-1): 
         #Habilitamos el driver del motor
         gpio.output(ENApin,gpio.LOW)
@@ -114,10 +155,12 @@ if __name__=="__main__":
     gpio.setup(LSUPpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
     gpio.setup(LSDOWNpin,gpio.IN,pull_up_down=gpio.PUD_UP)
 
-    while True:
-        print(gpio.input(LSUPpin))
-        #gpio.output(ENApin,gpio.HIGH)
-        #gpio.output(DIRpin,gpio.LOW)
-        #gpio.output(PULpin,gpio.HIGH)
-        #BajarEspejo()
-        SubirEspejo()
+
+    Subir10Rev()
+    # while True:
+    #     print(gpio.input(LSUPpin))
+    #     #gpio.output(ENApin,gpio.HIGH)
+    #     #gpio.output(DIRpin,gpio.LOW)
+    #     #gpio.output(PULpin,gpio.HIGH)
+    #     #BajarEspejo()
+    #     SubirEspejo()
