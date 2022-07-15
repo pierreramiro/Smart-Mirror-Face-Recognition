@@ -2,18 +2,20 @@
 #Importamos libreras
 import RPi.GPIO as gpio
 import time
-STEPTIME=125000/4
-pulsesPerRev=6400
-distPerRev=0.4
+STEPTIME=125000/2 #en microsegundos
+#STEPTIME=15000 #en microsegundos
+pulsesPerRev=1600 #3.5A
+distPerRev=0.515 #En cm
 PULSES_PER_DIST=pulsesPerRev/distPerRev
-
+VELOCIDAD_SUBIDA= 0.1#en cm/seg
+#STEPTIME=1000000/(PULSES_PER_DIST*VELOCIDAD_SUBIDA)
 
 def Subir10Rev():
     #Habilitamos el driver del motor
     gpio.output(ENApin,gpio.LOW)
     #Definimos la dirección
     gpio.output(DIRpin,gpio.HIGH)
-    for i in range(10):    
+    for i in range(10*pulsesPerRev):    
         #Ponemos en HIGH
         gpio.output(PULpin,gpio.HIGH)        
         #Esperamos en HIGH
@@ -32,7 +34,7 @@ def Bajar10Rev():
     gpio.output(ENApin,gpio.LOW)
     #Definimos la dirección
     gpio.output(DIRpin,gpio.LOW)
-    for i in range(10):  
+    for i in range(10*pulsesPerRev):  
         #Ponemos en HIGH
         gpio.output(PULpin,gpio.HIGH)        
         #Esperamos en HIGH
@@ -69,6 +71,8 @@ def SubirEspejo(distancia=-1):
                 while time.time_ns()-initTime<STEPTIME:
                     pass
         else:
+            totalPulses=distancia*PULSES_PER_DIST
+
             #Subimos el espejo una cierta altura o hasta sentir el limit switch
             for i in range(int(distancia*PULSES_PER_DIST)):
                 #Ponemos en HIGH
@@ -99,7 +103,7 @@ def BajarEspejo(distancia=-1):
             while gpio.input(LSDOWNpin)!=0:
                 #Ponemos en HIGH
                 gpio.output(PULpin,gpio.HIGH)        
-                #Esperamos en HIGH
+                #Esperamos en HIGH125000/4
                 initTime=time.time_ns()
                 while time.time_ns()-initTime<STEPTIME:
                     pass
@@ -155,12 +159,11 @@ if __name__=="__main__":
     gpio.setup(LSUPpin,gpio.IN,pull_up_down=gpio.PUD_DOWN)
     gpio.setup(LSDOWNpin,gpio.IN,pull_up_down=gpio.PUD_UP)
 
-
     Subir10Rev()
     # while True:
     #     print(gpio.input(LSUPpin))
     #     #gpio.output(ENApin,gpio.HIGH)
     #     #gpio.output(DIRpin,gpio.LOW)
     #     #gpio.output(PULpin,gpio.HIGH)
-    #     #BajarEspejo()
+    #     #BajarEspejo()    
     #     SubirEspejo()
