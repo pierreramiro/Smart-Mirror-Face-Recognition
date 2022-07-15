@@ -342,7 +342,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         parent=self.parent()
         #activamos nuevamente el sondeo
         parent.timer_display.start(500)
-        parent.timer_activeUser.start(100)
+        parent.timer_activeUser.start(10)
         self.CloseWindow=True
         print("Salimos del BT mode")
         event.accept()
@@ -627,6 +627,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
     def activeUser(self):
         #Verificamos el boton y la presencia de usuario
         self.countTimesSondeoBoton+=1
+        print("count sondeo",self.countTimesSondeoBoton)
         if gpio.input(self.BUTTONpin)==False:
             #Detenemos el sondeo
             print("Button pressed")
@@ -635,7 +636,8 @@ class mirrollGUI(QtWidgets.QMainWindow):
             #ponemos un popup de BT activado
             dlg = BT_DialogBox(self)
             dlg.show()
-        if self.countTimesSondeoBoton==150:
+        if self.countTimesSondeoBoton==80:
+            print("sondeamos presencia")
             self.countTimesSondeoBoton=0
             gpio.output(self.TRIGpin,gpio.HIGH)
             t1=time.time()
@@ -657,7 +659,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 if time.time()>t_timeout:
                     break
             runnningTime=(time.time()-t1)*1000000
-            print(runnningTime)
+            print("distancia: ",runnningTime*0.034/2)
             if runnningTime>self.maxTimeEcho:
                 print("Sensor, no detecta. Verificamos nuevamente y con camara")
                 #Ya no hay persona al frente. Pero verificamos nuevamente
@@ -696,7 +698,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     if time.time()>t_timeout:
                         break
                 runnningTime=(time.time()-t1)*1000000
-                print(runnningTime)
+                print("distancia: ",runnningTime*0.034/2)
                 """Calculemos con la camara"""
                 #Procedemos a verificar si hay rostro detectado
                 vs = VideoStream(src=0,framerate=10).start()
