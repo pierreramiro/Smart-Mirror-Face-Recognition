@@ -218,6 +218,7 @@ class sleepModeDialog(QtWidgets.QDialog):
                 #Salimos del sleep mode y personalizamos!
                 self.close()
                 self.parent().timer_display.start(500)
+                self.parent().timer_display_temp.start(20000)
                 self.parent().timer_activeUser.start(10)
         # No hay persona ne frente
         else:
@@ -342,6 +343,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         parent=self.parent()
         #activamos nuevamente el sondeo
         parent.timer_display.start(500)
+        self.parent().timer_display_temp.start(20000)
         parent.timer_activeUser.start(10)
         self.CloseWindow=True
         print("Salimos del BT mode")
@@ -540,8 +542,9 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.timer_activeUser.timeout.connect(self.activeUser)
         # Timer que actualiza los display de la GUI cuando se tiene al usuario activo
         self.timer_display=QTimer(self)
+        self.timer_display_temp=QTimer(self)
         self.timer_display.timeout.connect(self.displayFechayHora)
-        self.timer_display.timeout.connect(self.displayTemperatura) 
+        self.timer_display_temp.timeout.connect(self.displayTemperatura) 
         
     """##################################"""
     """Establecemos los métodos/funciones"""
@@ -633,6 +636,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
             print("Button pressed")
             self.timer_activeUser.stop()
             self.timer_display.stop()
+            self.timer_display_temp.stop()
             #ponemos un popup de BT activado
             dlg = BT_DialogBox(self)
             dlg.show()
@@ -672,6 +676,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                         #Detenemos el sondeo
                         print("Button pressed")
                         self.timer_display.stop()
+                        self.timer_display_temp.stop()
                         self.timer_activeUser.stop()
                         #ponemos un popup de BT activado
                         dlg = BT_DialogBox(self)
@@ -714,6 +719,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     print("No hay nadie")
                     self.timer_activeUser.stop()
                     self.timer_display.stop()
+                    self.timer_display_temp.stop()
                     #Abrimos el dialogo de modo sleep
                     dlg = sleepModeDialog(self)
                     dlg.show()
