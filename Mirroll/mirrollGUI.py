@@ -519,10 +519,10 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         #Establecemos info por defecto
-        self.fecha_actual="viernes, 10 de junio del 2022"
-        self.hora_actual="18:00 pm"
-        self.temperatura_actual="00"
-        self.ui.temperatura.setText(self.temperatura_actual)   
+        # self.fecha_actual="viernes, 10 de junio del 2022"
+        # self.hora_actual="18:00 pm"
+        #self.temperatura_actual="00"
+        #self.ui.temperatura.setText(self.temperatura_actual)   
         #Creamos unas variables flags
         self.initialization=True
         #Definimos unas variables
@@ -626,6 +626,9 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Abrimos la ventana de modo Sleep
         dlg = sleepModeDialog(self)
         dlg.show()
+        #Actualizamos la temperatura
+        self.displayTemperatura()
+        self.displayFechayHora()
 
     def activeUser(self):
         #Verificamos el boton y la presencia de usuario
