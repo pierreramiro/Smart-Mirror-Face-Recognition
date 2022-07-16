@@ -59,7 +59,7 @@ def SubirEspejo(distancia=-1):
         #Primero iniciamos con un step time para una velocidad a la mitad de la de bajada
         initSteptime=STEPTIME*2 #En este caso será de de 1cm/seg la velocidad de subida
         #Luego de cierto tiempo aumentamos la velocidad a 2cm/seg
-        timeSlowStep=1#en segundos
+        timeSlowStep=1.5#en segundos
         initPulsesInSlow=(timeSlowStep*1000000000)/(initSteptime*2)#Para el caso de 1seg tenemos un total de 4000 pulsos
         tempSteptime=initSteptime
         adderStepTime=(STEPTIME-initSteptime)/initPulsesInSlow
