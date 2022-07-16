@@ -819,7 +819,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.DIRpin,gpio.LOW)
         if distancia==-1:
             #Bajamos el espejo hasta sentir el limit switch
-            while gpio.input(self.LSDOWNpin)!=0:
+            while gpio.input(self.LSDOWNpin)==0:
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
@@ -835,21 +835,28 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     pass
         else:
             #Bajamos una cierta altura o hasta sentir el Limit switch
+            salirDelFor=False
             for i in range(int(distancia*PULSES_PER_DIST)):
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
                 initTime=time.time_ns()
                 while time.time_ns()-initTime<STEPTIME:
-                    if gpio.input(self.LSDOWNpin)==0:
+                    if gpio.input(self.LSDOWNpin)!=0:
+                        salirDelFor=True
                         break
                 #Ponemos en LOW
                 gpio.output(self.PULpin,gpio.LOW)        
+                if salirDelFor:
+                    break
                 #Esperamos en LOW
                 initTime=time.time_ns()
                 while time.time_ns()-initTime<STEPTIME:
-                    if gpio.input(self.LSDOWNpin)==0:
+                    if gpio.input(self.LSDOWNpin)!=0:
+                        salirDelFor=True
                         break
+                if salirDelFor:
+                    break
         gpio.output(self.ENApin,gpio.HIGH)
     
     def SubirEspejo(self,distancia=-1): 
@@ -857,38 +864,60 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.ENApin,gpio.LOW)
         #Definimos la dirección
         gpio.output(self.DIRpin,gpio.HIGH)
+        #Primero iniciamos con un step time para una velocidad a la mitad de la de bajada
+        initSteptime=STEPTIME*2 #En este caso será de de 1cm/seg la velocidad de subida
+        #Luego de cierto tiempo aumentamos la velocidad a 2cm/seg
+        timeSlowStep=1.5#en segundos
+        initPulsesInSlow=(timeSlowStep*1000000000)/(initSteptime*2)#Para el caso de 1seg tenemos un total de 4000 pulsos
+        tempSteptime=initSteptime
+        adderStepTime=(STEPTIME-initSteptime)/initPulsesInSlow
         if distancia==-1:
             #Subimos el espejo hasta sentir el limit switch
             while gpio.input(self.LSUPpin)==0:#notar que se detiene en flanco de subida!
+                if tempSteptime>=STEPTIME:
+                    tempSteptime=STEPTIME
+                else:
+                    tempSteptime+=adderStepTime
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
                 initTime=time.time_ns()
-                while time.time_ns()-initTime<STEPTIME:
+                while time.time_ns()-initTime<tempSteptime:
                     pass
                 #Ponemos en LOW
                 gpio.output(self.PULpin,gpio.LOW)        
                 #Esperamos en LOW
                 initTime=time.time_ns()
-                while time.time_ns()-initTime<STEPTIME:
+                while time.time_ns()-initTime<tempSteptime:
                     pass
         else:
+            salirDelFor=False
             #Subimos el espejo una cierta altura o hasta sentir el limit switch
             for i in range(int(distancia*PULSES_PER_DIST)):
+                if tempSteptime>=STEPTIME:
+                    tempSteptime=STEPTIME
+                else:
+                    tempSteptime+=adderStepTime
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
                 initTime=time.time_ns()
-                while time.time_ns()-initTime<STEPTIME:
+                while time.time_ns()-initTime<tempSteptime:
                     if gpio.input(self.LSUPpin)!=0:
+                        salirDelFor=True
                         break
                 #Ponemos en LOW
                 gpio.output(self.PULpin,gpio.LOW)        
+                if salirDelFor:
+                    break
                 #Esperamos en LOW
                 initTime=time.time_ns()
-                while time.time_ns()-initTime<STEPTIME:
+                while time.time_ns()-initTime<tempSteptime:
                     if gpio.input(self.LSUPpin)!=0:
+                        salirDelFor=True
                         break
+                if salirDelFor:
+                    break
         #Deshabilitamos el driver del motor
         gpio.output(self.ENApin,gpio.HIGH)
 
