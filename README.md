@@ -3,16 +3,16 @@ Repositorio de los algoritmos usados para el proyecto:
 https://github.com/pierreramiro/Smart-Mirror-Face-Recognition
 
 ## Detalles técnicos:
-Raspberry Pi 4B, 2GB ram
+### Raspberry Pi 4B, 2GB ram
 Este dispositivo se encargará del control de todos los periféricos establecidos en el proyecto y de la visualización de la interfaz gráfica del usuario.
-Motor NEMA 23 2.8A.
-DRIVER MOTOR TB6600
+### Motor NEMA 23 2.8A.
+### DRIVER MOTOR TB6600
 Este dispositivo tiene 3 pines de control: EN_pin, DIR_pin, PULL_pin. Con el pin EN_pin en baja, se puede habilitar el driver. El DIR_pin nos permitirá controlar el sentido de giro. Y el pin PULL_pin debe recibir pulsos según la configuración manual establecida en el driver con los switches. 
-Cámara web
-Sensor Ultrasonido HC-SR04
-Módulo Bluetooth HM-10
-Relés de estado sólido. Lógica Baja 3V3
-Luces RGB
+### Cámara web
+### Sensor Ultrasonido HC-SR04
+### Módulo Bluetooth HM-10
+### Relés de estado sólido. Lógica Baja 3V3
+### Luces RGB
 
 
 ## Funcionamiento del software:
