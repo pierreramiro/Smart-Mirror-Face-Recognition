@@ -381,7 +381,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.countPics=0
         self.picTaken=False
         self.ponerNuevaPose=True
-        self.maxNumbersPics=12
+        self.maxNumbersPics=20
         #Creamos unos widgets
         self.imageLabel = QtWidgets.QLabel()
         self.sencondLine = QtWidgets.QLabel("Coloque su rostro como muestra la imagen")   
