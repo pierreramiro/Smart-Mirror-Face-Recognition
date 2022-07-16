@@ -867,14 +867,14 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Primero iniciamos con un step time para una velocidad a la mitad de la de bajada
         initSteptime=STEPTIME*2 #En este caso será de de 1cm/seg la velocidad de subida
         #Luego de cierto tiempo aumentamos la velocidad a 2cm/seg
-        timeSlowStep=1.5#en segundos
+        timeSlowStep=2#en segundos
         initPulsesInSlow=(timeSlowStep*1000000000)/(initSteptime*2)#Para el caso de 1seg tenemos un total de 4000 pulsos
         tempSteptime=initSteptime
         adderStepTime=(STEPTIME-initSteptime)/initPulsesInSlow
         if distancia==-1:
             #Subimos el espejo hasta sentir el limit switch
             while gpio.input(self.LSUPpin)==0:#notar que se detiene en flanco de subida!
-                if tempSteptime>=STEPTIME:
+                if tempSteptime<=STEPTIME:
                     tempSteptime=STEPTIME
                 else:
                     tempSteptime+=adderStepTime
@@ -894,7 +894,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
             salirDelFor=False
             #Subimos el espejo una cierta altura o hasta sentir el limit switch
             for i in range(int(distancia*PULSES_PER_DIST)):
-                if tempSteptime>=STEPTIME:
+                if tempSteptime<=STEPTIME:
                     tempSteptime=STEPTIME
                 else:
                     tempSteptime+=adderStepTime
