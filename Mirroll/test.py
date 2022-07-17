@@ -145,10 +145,14 @@ class Gui(QtWidgets.QMainWindow):
     def button_clicked(self, s):
         #print("click", s)
         #print("Valor antes de cerrar la notificacion: ",self.newVal)
+        f=open("archivo.txt","w")
         dlg = warningBox(self,val=5)
         dlg.show()
-    # def imprime(self):
-    #     #print("Hola Pierre")
+        f.close()
+        #actualizamos git
+        import git
+        repo = git.Repo('/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition')
+        repo.remotes.origin.pull()
 
 
 
