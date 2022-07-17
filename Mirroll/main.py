@@ -1,6 +1,4 @@
-# from PyQt5 import QtCore, QtGui, QtWidgets
-# import sys
-#import Windows2
+#!/usr/bin/env python3
 import mirrollGUI
 if __name__ == "__main__":
     #Windows2.setUpMirrollGUI()
