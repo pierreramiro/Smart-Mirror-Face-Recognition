@@ -1,31 +1,76 @@
 import sys
-import time
-
-from PyQt5.QtCore import QTimer, QTime, QDate,Qt
+from MainWindow import Ui_MainWindow
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QTimer, QTime, QDate
 from PyQt5.QtGui import QImage,QPixmap
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QPushButton, QVBoxLayout,QLabel
+import time
+import csv
+#Librería para el control del Raspberry
+import serial #uart
+
+#Libreria para face recognition
+import cv2
+from face_recognition import face_encodings as FR_face_encodings
+from face_recognition import face_locations as FR_face_locations
+from face_recognition import compare_faces as FR_compare_faces
+import pickle
+from imutils.video import VideoStream
+from imutils import resize as imResize
+#Variable globales para la temperatura
+import requests
+BASE_URL = "https://api.openweathermap.org/data/2.5/weather?"
+CITY = "Lima"
+API_KEY = "29244f2262bb6898c19715b2ae7ca9dc"
+# upadting the URL
+URL = BASE_URL + "q=" + CITY + "&appid=" + API_KEY
+
+#Variables globales
+noColor=[False,False,False]# noColor=[gpio.LOW,gpio.LOW,gpio.LOW]
+rojo=[False,True,False]# rojo=[gpio.LOW,gpio.HIGH,gpio.LOW]
+verde=[True,False,False]# verde=[gpio.HIGH,gpio.LOW,gpio.LOW]
+azul=[False,False,True]# azul=[gpio.LOW,gpio.LOW,gpio.HIGH]
+amarillo=[True,True,False]# amarillo=[gpio.HIGH,gpio.HIGH,gpio.LOW]
+cian=[True,False,True]# cian=[gpio.HIGH,gpio.LOW,gpio.HIGH]
+rosado=[False,True,True]# rosado=[gpio.LOW,gpio.HIGH,gpio.HIGH]
+blanco=[True,True,True]# blanco=[gpio.HIGH,gpio.HIGH,gpio.HIGH]
+colores=["noColor","rojo","verde","azul","amarillo","cian","rosado","blanco"]
+coloresGPIO=[noColor,rojo,verde,azul,amarillo,cian,rosado,blanco]
+#Face Recog resources
+imagenesFaceRecognition = ['RostroIzq','RostroIzqMID','RostroFrente','RostroDerMID','RostroDer','RostroArriba']
+imagenesProcessing=["Procesando1.png","Procesando2.png","Procesando3.png","Procesando4.png","Procesando5.png","Procesando6.png"]
+#foldar names dataset
+usersFolder=["user0","user1","user2","user3","user4","user5","user6","user7","user8","user9"]
+#variables globales
+STEPTIME=125000/2#en nanosec #Se tiene una velocidad de 2cm/seg
+pulsesPerRev=1600 #con 3.5A
+distPerRev=0.515 #en cm
+PULSES_PER_DIST=pulsesPerRev/distPerRev
+#Tamaño de la ventana
 WIDTH_SCREEN=1920
 HEIGHT_SCREEN=1080
+#max altura
+MAXIMA_ALTURA_ESPEJO=20
+MINIMA_ALTURA_ESPEJO=0
 
 dato=1
 
-class sleepModeDialog(QDialog):
+class sleepModeDialog(QtWidgets.QDialog):
     def __init__(self,parent=None,val=0):
         super(sleepModeDialog,self).__init__(parent)
         self.val=val
         #nombre a la ventana
         self.setWindowTitle("Sleep!")
-        self.setWindowFlag(Qt.FramelessWindowHint, True)
+        self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
         #Establecemos el tamaño de la pantalla
         self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
         #Creo un layout
-        self.layout = QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
         # loading image
         image = QImage('resources/Bt.png')
-        image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), Qt.KeepAspectRatio)
-        self.imageLabel = QLabel()
+        image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
+        self.imageLabel = QtWidgets.QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
-        self.imageLabel.setAlignment(Qt.AlignCenter)
+        self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(self.imageLabel)
         # Configuramos el layout
         self.setLayout(self.layout)
@@ -46,17 +91,17 @@ class sleepModeDialog(QDialog):
         self.timer.stop()
         event.accept()
 
-class warningBox (QDialog):
+class warningBox (QtWidgets.QDialog):
     def __init__(self,parent=None,val=0):
         super(warningBox,self).__init__(parent)
         self.val=val
         #nombre a la ventana
         self.setWindowTitle("HELLO!")
         #Creo un layout
-        self.layout = QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
         # loading image
         image = QImage('resources/facePostions.jpeg')
-        self.imageLabel = QLabel()
+        self.imageLabel = QtWidgets.QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
         self.layout.addWidget(self.imageLabel)
         # Configuramos el layout
@@ -74,15 +119,17 @@ class warningBox (QDialog):
         self.timer.stop()
         event.accept()
 
-class MainWindow(QMainWindow):
+class Gui(QtWidgets.QMainWindow):
     def __init__(self):
-        super().__init__()
-        self.setWindowTitle("My App")
-        self.setWindowFlag(Qt.FramelessWindowHint, True)
+        QtWidgets.QMainWindow.__init__(self)
+        #Creamos nuestra GUI
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
         self.dato=dato
-        button = QPushButton("Press me for a dialog!")
-        button.clicked.connect(self.button_clicked)
-        self.setCentralWidget(button)
+        self.button = QtWidgets.QPushButton("Press me for a dialog!",self.ui.frame_2)
+        self.button.setGeometry(QtCore.QRect(WIDTH_SCREEN-500, HEIGHT_SCREEN-500, 200, 200))
+        self.button.clicked.connect(self.button_clicked)
         self.startVal=True
         self.time1=QTimer()
         self.time1.timeout.connect(self.initMirroll)
@@ -104,11 +151,10 @@ class MainWindow(QMainWindow):
 
 
 
-app = QApplication(sys.argv)
+app = QtWidgets.QApplication(sys.argv)
 
-window = MainWindow()
+window = Gui()
 window.show()
-
-app.exec()
+sys.exit(app.exec())
 
 
