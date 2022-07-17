@@ -487,7 +487,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         #Lo pasamos a rgb
         rgb=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         #Guardamos la imagen
-        cv2.imwrite("dataset/User"+str(self.idUser)+"/image"+str(self.countPics)+".png",frame)
+        cv2.imwrite("dataset/user"+str(self.idUser)+"/image"+str(self.countPics)+".png",frame)
         #detectamos los rostros boxes
         boxes = FR_face_locations(rgb,model="hog") #Se escoge el modelo hog
         #obtenemos los encodings
