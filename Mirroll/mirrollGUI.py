@@ -154,7 +154,7 @@ class sleepModeDialog(QtWidgets.QDialog):
             self.parent().setColorLeds("blanco")
             print("distancia:",runnningTime*0.034/2)
             #Verificamos rostro con camara y verificaremos N veces..
-            N_triesOfVerification=3
+            N_triesOfVerification=9
             nPhotosTaken=0
             idUserDetected=[]
             exitSleepMode=True
