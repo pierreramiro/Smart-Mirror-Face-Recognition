@@ -52,6 +52,8 @@ HEIGHT_SCREEN=1080
 #max altura
 MAXIMA_ALTURA_ESPEJO=20
 MINIMA_ALTURA_ESPEJO=0
+#Variable para el repo
+PATH_REPO='/home/smartmirror/Documents/Github/Smart-Mirror-Face-Recognition'
 
 """ //////////////////////////////////////////
     //               Clases                 //
@@ -91,6 +93,11 @@ class sleepModeDialog(QtWidgets.QDialog):
         #Hacemos el procesamiento y la configuración
         if self.parent().initialization:
             self.parent().initialization=False
+            #Hacemos un pull para actualizar algunas variables del código
+            from git import Repo
+            repo = Repo(PATH_REPO)
+            origin = repo.remote(name='origin')
+            origin.pull()        
             #Cargamos el enntrenamiento
             self.parent().knownEncodings = pickle.loads(open("encodings.pickle", "rb").read())
             #Cargamos el archivo guardado con la configuracion de los perfiles
@@ -332,6 +339,13 @@ class BT_DialogBox (QtWidgets.QDialog):
                 for row in perfiles[0:-1]:
                     writer.writerow(row)
                 file.close()
+                """VOLVEMOS A HACER UN PULL"""
+                #Hacemos un pull en caso se actualizó el encodings.pickle desde una maquina externa
+                from git import Repo
+                repo = Repo(PATH_REPO)
+                origin = repo.remote(name='origin')
+                origin.pull()
+                #Salimos del modo BtConnected
                 self.close()
             else:
                 print("función no creada")
@@ -485,10 +499,21 @@ class configureUser_DialogBox (QtWidgets.QDialog):
             self.parent().configureGPIOMirrol()
         """Realizamos el procesamiento"""
         frame=self.frames[self.countPics]
-        #Lo pasamos a rgb
+        # Lo pasamos a rgb
         rgb=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        #Guardamos la imagen
+        # Guardamos la imagen
         cv2.imwrite("dataset/user"+str(self.idUser)+"/image"+str(self.countPics)+".png",frame)
+        
+        # Actualizamos git haciendo un PUSH, para poder hacer procesamiento en maquina externa
+        from git import Repo
+        repo = Repo(PATH_REPO)
+        #añadimos todos los archivos modificados
+        repo.git.add('--all')
+        #Añadimos comentario
+        repo.git.commit('-m', f'usuario {self.idUser} foto N.{self.countPics}')
+        origin = repo.remote(name='origin')
+        origin.push() 
+        
         #detectamos los rostros boxes
         boxes = FR_face_locations(rgb,model="hog") #Se escoge el modelo hog
         #obtenemos los encodings
