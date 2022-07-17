@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 from MainWindow import Ui_MainWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -83,9 +84,9 @@ class sleepModeDialog(QtWidgets.QDialog):
         self.timer.stop()
         for i in range(2):
             time.sleep(1)
-            print("Tiempo transcurrido:",i)
+            #print("Tiempo transcurrido:",i)
         time.sleep(1)
-        print("Cerramos el sleep")
+        #print("Cerramos el sleep")
         self.close()
     def closeEvent(self, event):
         self.timer.stop()
@@ -111,8 +112,8 @@ class warningBox (QtWidgets.QDialog):
         self.timer.start(1000)
 
     def CloseWarning(self):
-        print("Valor despues de crear la notificacion: ",self.val)
-        self.parent().imprime()
+        #print("Valor despues de crear la notificacion: ",self.val)
+        #self.parent().imprime()
         self.close()
     
     def closeEvent(self, event):
@@ -142,12 +143,12 @@ class Gui(QtWidgets.QMainWindow):
         
 
     def button_clicked(self, s):
-        print("click", s)
-        print("Valor antes de cerrar la notificacion: ",self.newVal)
+        #print("click", s)
+        #print("Valor antes de cerrar la notificacion: ",self.newVal)
         dlg = warningBox(self,val=5)
         dlg.show()
-    def imprime(self):
-        print("Hola Pierre")
+    # def imprime(self):
+    #     #print("Hola Pierre")
 
 
 
