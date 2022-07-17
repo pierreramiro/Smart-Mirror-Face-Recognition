@@ -263,23 +263,23 @@ class BT_DialogBox (QtWidgets.QDialog):
         #Configuramos/actualizamos el layout
         self.setLayout(self.layout)
         #Abrir puerto
-        self.ser = serial.Serial ("/dev/ttyS0", 9600)    #Open port with baud rate
+        self.ser = serial.Serial ("/dev/ttyS0", 9600,timeout=0.3)#timeout de 300ms
         #Flag
         self.ConfigRostro=False
         self.CloseWindow=False
         #Creamos timer para sondear datos
         self.timer_Datos=QTimer()
         self.timer_Datos.timeout.connect(self.sondeaDatos)
-        self.timer_Datos.start(300)
+        self.timer_Datos.start(1)
 
     def sondeaDatos(self):
         if self.ConfigRostro:
             return
         #recibir data:   [funcion,idUser,color,BINtomacorrientes,altura]
         received_data = self.ser.read()              #read serial port
-        time.sleep(0.03)
-        data_left = self.ser.inWaiting()             #check for remaining byte
-        received_data += self.ser.read(data_left)
+        # time.sleep(0.03)
+        # data_left = self.ser.inWaiting()             #check for remaining byte
+        # received_data += self.ser.read(data_left)
         if len(received_data)!=0:
             #Desactivamos sondeo, porque hemos recibido información. Lo activamos nuevamente al final
             #Esto lo hacemos para asegurar los tiempos entre timeouts
@@ -352,6 +352,29 @@ class BT_DialogBox (QtWidgets.QDialog):
             #Activamos sondeo, que habiamos desactivado al inicio
             if not(self.CloseWindow):
                 self.timer_Datos.start()
+        if gpio.input(self.parent().BUTTONpin)==False:
+            #Button pressed. Verificamos si si pasan 5 segundos paara salir de este modo
+            time.sleep(3)
+            if gpio.input(self.parent().BUTTONpin)==False:
+                #Salimos del modo BtConnected
+                #Guardamos los nuevos perfiles en un csv
+                file=open("userConfig.csv","w")
+                writer=csv.writer(file)
+                parent=self.parent()
+                perfiles=parent.perfiles
+                for row in perfiles[0:-1]:
+                    writer.writerow(row)
+                file.close()
+                """VOLVEMOS A HACER UN PULL"""
+                #Hacemos un pull en caso se actualizó el encodings.pickle desde una maquina externa
+                from git import Repo
+                repo = Repo(PATH_REPO)
+                origin = repo.remote(name='origin')
+                origin.pull()
+                #Salimos del modo BtConnected
+                self.close()
+                self.timer_Datos.stop()
+
             
     #Esta función por si sola nos permite aceptar el evento de cierre (not modified)
     def closeEvent(self, event):
