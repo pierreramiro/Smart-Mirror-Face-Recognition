@@ -52,6 +52,11 @@ HEIGHT_SCREEN=1080
 #max altura
 MAXIMA_ALTURA_ESPEJO=20
 MINIMA_ALTURA_ESPEJO=0
+#Variable para el repo
+PATH_REPO='/home/smartmirror/Documents/Github/Smart-Mirror-Face-Recognition'
+# PATH_REPO='/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition'
+# PATH_REPO='/home/catolica/Documents/Github/Smart-Mirror-Face-Recognition'
+
 
 dato=1
 
@@ -141,7 +146,7 @@ class Gui(QtWidgets.QMainWindow):
         dlg = sleepModeDialog(self)
         dlg.show()
         from git import Repo
-        repo = Repo('/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition')
+        repo = Repo(PATH_REPO)
         origin = repo.remote(name='origin')
         origin.pull()
         
@@ -149,21 +154,19 @@ class Gui(QtWidgets.QMainWindow):
     def button_clicked(self, s):
         #print("click", s)
         #print("Valor antes de cerrar la notificacion: ",self.newVal)
-        f=open("archivo.txt","w")
+        f=open("archivoDePrueba.txt","w")
         dlg = warningBox(self,val=5)
         dlg.show()
         f.close()
-        #actualizamos git
+        """actualizamos git"""
         from git import Repo
-        repo = Repo('/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition')
+        repo = Repo(PATH_REPO)
         #añadimos todos los archivos modificados
         repo.git.add('--all')
         #Añadimos comentario
         repo.git.commit('-m', 'boton pressed')
         origin = repo.remote(name='origin')
         origin.push()
-        #repo.remotes.origin.pull()
-
 
 
 app = QtWidgets.QApplication(sys.argv)
