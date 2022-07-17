@@ -154,7 +154,7 @@ class sleepModeDialog(QtWidgets.QDialog):
             self.parent().setColorLeds("blanco")
             print("distancia:",runnningTime*0.034/2)
             #Verificamos rostro con camara y verificaremos N veces..
-            N_triesOfVerification=4
+            N_triesOfVerification=1
             nPhotosTaken=0
             idUserDetected=[]
             exitSleepMode=True
@@ -163,7 +163,7 @@ class sleepModeDialog(QtWidgets.QDialog):
             face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
             while nPhotosTaken<N_triesOfVerification:
                 # Sumamos la cantidad de veces que hemos tomado la foto
-                nPhotosTaken+=1
+                nPhotosTaken+=3
                 # Tomamos la photo
                 ret, frame = cam.read()
                 #cv2.imwrite(str(nPhotosTaken)+".jpg",frame)
