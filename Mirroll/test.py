@@ -162,7 +162,7 @@ class Gui(QtWidgets.QMainWindow):
         repo.git.commit('-m', 'boton pressed')
         origin = repo.remote(name='origin')
         origin.push()
-        repo.remotes.origin.pull()
+        #repo.remotes.origin.pull()
 
 
 
