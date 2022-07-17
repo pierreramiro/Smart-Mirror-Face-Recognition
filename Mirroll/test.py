@@ -140,6 +140,10 @@ class Gui(QtWidgets.QMainWindow):
         self.time1.stop()
         dlg = sleepModeDialog(self)
         dlg.show()
+        from git import Repo
+        repo = Repo('/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition')
+        origin = repo.remote(name='origin')
+        origin.pull()
         
 
     def button_clicked(self, s):
@@ -150,8 +154,14 @@ class Gui(QtWidgets.QMainWindow):
         dlg.show()
         f.close()
         #actualizamos git
-        import git
-        repo = git.Repo('/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition')
+        from git import Repo
+        repo = Repo('/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition')
+        #añadimos todos los archivos modificados
+        repo.git.add('--all')
+        #Añadimos comentario
+        repo.git.commit('-m', 'boton pressed')
+        origin = repo.remote(name='origin')
+        origin.push()
         repo.remotes.origin.pull()
 
 
