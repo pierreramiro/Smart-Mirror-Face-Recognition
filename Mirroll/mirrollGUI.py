@@ -51,6 +51,7 @@ WIDTH_SCREEN=1920
 HEIGHT_SCREEN=1080
 #max altura
 MAXIMA_ALTURA_ESPEJO=20
+MINIMA_ALTURA_ESPEJO=0
 
 """ //////////////////////////////////////////
     //               Clases                 //
@@ -790,6 +791,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         gpio.output(self.LBLUEpin,coloresGPIO[idColor][2])
         """Altura motor"""
         diffAltura=self.perfiles[self.IdUserToShow][0]-self.actualAltura
+        self.actualAltura=self.perfiles[self.IdUserToShow][0]
         if diffAltura<0:
             #Bajamos motor
             print("bajamos motor")
@@ -802,7 +804,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
         else:
             #mantenemos la altura
             print("Dejamos la altura",self.actualAltura)
-        self.actualAltura=self.perfiles[self.IdUserToShow][0]
 
     def setColorLeds(self,color):
         #actualizamos el color
@@ -844,6 +845,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 while time.time_ns()-initTime<STEPTIME:
                     if gpio.input(self.LSDOWNpin)!=0:
                         salirDelFor=True
+                        self.actualAltura=MINIMA_ALTURA_ESPEJO
                         break
                 #Ponemos en LOW
                 gpio.output(self.PULpin,gpio.LOW)        
@@ -854,6 +856,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 while time.time_ns()-initTime<STEPTIME:
                     if gpio.input(self.LSDOWNpin)!=0:
                         salirDelFor=True
+                        self.actualAltura=MINIMA_ALTURA_ESPEJO
                         break
                 if salirDelFor:
                     break
@@ -905,6 +908,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 while time.time_ns()-initTime<tempSteptime:
                     if gpio.input(self.LSUPpin)!=0:
                         salirDelFor=True
+                        self.actualAltura=MAXIMA_ALTURA_ESPEJO
                         break
                 #Ponemos en LOW
                 gpio.output(self.PULpin,gpio.LOW)        
@@ -915,6 +919,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 while time.time_ns()-initTime<tempSteptime:
                     if gpio.input(self.LSUPpin)!=0:
                         salirDelFor=True
+                        self.actualAltura=MAXIMA_ALTURA_ESPEJO
                         break
                 if salirDelFor:
                     break
