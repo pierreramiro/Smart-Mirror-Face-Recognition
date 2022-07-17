@@ -115,7 +115,7 @@ class sleepModeDialog(QtWidgets.QDialog):
             self.parent().ConfigRaspberryGPIO()
         #Volvemos a establecer el espejo al tope
         self.parent().SubirEspejo()
-        print("Limit activado!")
+        #print("Limit activado!")
         #Procedemos a entrar al modo sleep!
         self.parent().setColorLeds("noColor")
         gpio.output(self.parent().CH1pin,gpio.HIGH)
@@ -153,7 +153,7 @@ class sleepModeDialog(QtWidgets.QDialog):
         if runnningTime<self.parent().maxTimeEcho: 
             #Tenemos algo en frente!. Prendemos luces en blanco.
             self.parent().setColorLeds("blanco")
-            print("distancia:",runnningTime*0.034/2)
+            #print("distancia:",runnningTime*0.034/2)
             #Verificamos rostro con camara y verificaremos N veces..
             N_triesOfVerification=1
             nPhotosTaken=0
@@ -169,7 +169,7 @@ class sleepModeDialog(QtWidgets.QDialog):
                 ret, frame = cam.read()
                 #cv2.imwrite(str(nPhotosTaken)+".jpg",frame)
                 # Obtenemos la cara de la foto
-                print("Fotos tomadas",nPhotosTaken)
+                #print("Fotos tomadas",nPhotosTaken)
                 gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
                 faces=face_cascade.detectMultiScale(gray,1.1,4)
                 # Procedemos a verificar si hay rostro o no
@@ -194,22 +194,22 @@ class sleepModeDialog(QtWidgets.QDialog):
                     if idUserMatch==[0]*10:
                         #Configuración por defecto
                         idUserDetected.append(10)
-                        print(f"Usuario Desconocido")                        
+                        #print(f"Usuario Desconocido")                        
                     else:
                         #Configuracion personalizada
                         #En teoría, sea el caso que aparecieron mas rostros en la foto.. se escogerá el primero en orden    
                         idUserDetected.append(idUserMatch.index(max(idUserMatch)))
-                        print(f"Usuario a mostrar: User{self.parent().IdUserToShow+1}")                    
+                        #print(f"Usuario a mostrar: User{self.parent().IdUserToShow+1}")                    
                 # Si no hay rostro, en las N verificaciones, consideramos que no habia nadie en frente y salimos del while
                 else:
-                    print("No hay rostro detectado por la camara")
+                    #print("No hay rostro detectado por la camara")
                     exitSleepMode=False
                     break
             #vs.stop()
             cam.release()
             if exitSleepMode:
                 #De los usuarios detectados, nos quedamos con la moda
-                print("Usuarios detectados:",idUserDetected)
+                #print("Usuarios detectados:",idUserDetected)
                 from statistics import mode 
                 self.parent().IdUserToShow=int(mode(idUserDetected))
                 #Segun el usuario detectado, configuramos los GPIO
@@ -230,7 +230,7 @@ class sleepModeDialog(QtWidgets.QDialog):
 
 class BT_DialogBox (QtWidgets.QDialog):
     def __init__(self,parent=None):
-        print("entramos init BT dialog")
+        #print("entramos init BT dialog")
         super(BT_DialogBox,self).__init__(parent)
         #Desaparecemos el titleBar
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
@@ -278,12 +278,12 @@ class BT_DialogBox (QtWidgets.QDialog):
             #Esto lo hacemos para asegurar los tiempos entre timeouts
             self.timer_Datos.stop()
             #Decodificamos data
-            print("received data: ",received_data)
+            #print("received data: ",received_data)
             received_data=eval(received_data.decode())
             #Con el primer elemento podemos revisar que función aplicamos
             if received_data[0]==0:
                 """Trama de configurar rostro"""
-                print("Al usuario: ",received_data[1],"Le modificaremos su rostro")
+                #print("Al usuario: ",received_data[1],"Le modificaremos su rostro")
                 #ponemos un popup de BT activado
                 temp=received_data[1]-1
                 parent=self.parent()
@@ -294,7 +294,7 @@ class BT_DialogBox (QtWidgets.QDialog):
                 """Trama como usuario básico"""
                 idUser=received_data[1]-1
                 color=received_data[2]
-                print("El usuario: ",idUser,"tiene color: ", color)
+                #print("El usuario: ",idUser,"tiene color: ", color)
                 parent=self.parent()
                 #obtengo el usuario que se va a mostrar
                 parent.IdUserToShow=idUser
@@ -311,7 +311,7 @@ class BT_DialogBox (QtWidgets.QDialog):
                 altura=received_data[4]
                 if altura>MAXIMA_ALTURA_ESPEJO:
                     altura=MAXIMA_ALTURA_ESPEJO
-                print("El usuario: ",idUser,"tiene color: ", color,"se activan:",BINtomacorrientes,"y altura:",altura)
+                #print("El usuario: ",idUser,"tiene color: ", color,"se activan:",BINtomacorrientes,"y altura:",altura)
                 parent=self.parent()
                 #obtengo el usuario que se va a mostrar
                 parent.IdUserToShow=idUser
@@ -347,7 +347,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         self.parent().timer_display_temp.start(20000)
         parent.timer_activeUser.start(10)
         self.CloseWindow=True
-        print("Salimos del BT mode")
+        #print("Salimos del BT mode")
         event.accept()
 
 class configureUser_DialogBox (QtWidgets.QDialog):
@@ -396,20 +396,20 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.timer_one.timeout.connect(self.takePicsNewUser)
         self.timer_two=QTimer()
         self.timer_two.timeout.connect(self.processPicsNewUser)
-        print("Salimos del init FR")
+        #print("Salimos del init FR")
         
     def initMirrolUp(self):
         #detenemos el timer
         self.timer_zero.stop()
         self.parent().setColorLeds("blanco")
         self.parent().SubirEspejo()
-        print("Limit activado!")
+        #print("Limit activado!")
         self.parent().actualAltura=MAXIMA_ALTURA_ESPEJO
         #Iniciamos los timer
         self.timer_one.start(800)        
 
     def takePicsNewUser(self):
-        print("Tomamos foto")
+        #print("Tomamos foto")
         if self.countPics==self.maxNumbersPics:
             #Detenenmos este timer
             self.timer_one.stop()
@@ -466,12 +466,12 @@ class configureUser_DialogBox (QtWidgets.QDialog):
                 gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
                 faces=face_cascade.detectMultiScale(gray,1.1,4)
             self.picTaken=True
-            print("foto: ",self.countPics)
+            #print("foto: ",self.countPics)
             #Guardamos la foto para hacer procesamiento
             self.frames.append(frame)
         
     def processPicsNewUser(self):
-        print("procesamos foto")
+        #print("procesamos foto")
         if self.countPics==self.maxNumbersPics:
             #desahibiltamos el timer
             self.timer_two.stop()
@@ -634,10 +634,10 @@ class mirrollGUI(QtWidgets.QMainWindow):
     def activeUser(self):
         #Verificamos el boton y la presencia de usuario
         self.countTimesSondeoBoton+=1
-        print("count sondeo",self.countTimesSondeoBoton)
+        #print("count sondeo",self.countTimesSondeoBoton)
         if gpio.input(self.BUTTONpin)==False:
             #Detenemos el sondeo
-            print("Button pressed")
+            #print("Button pressed")
             self.timer_activeUser.stop()
             self.timer_display.stop()
             self.timer_display_temp.stop()
@@ -645,7 +645,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
             dlg = BT_DialogBox(self)
             dlg.show()
         if self.countTimesSondeoBoton==80:
-            print("sondeamos presencia")
+            #print("sondeamos presencia")
             self.countTimesSondeoBoton=0
             gpio.output(self.TRIGpin,gpio.HIGH)
             t1=time.time()
@@ -667,9 +667,9 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 if time.time()>t_timeout:
                     break
             runnningTime=(time.time()-t1)*1000000
-            print("distancia: ",runnningTime*0.034/2)
+            #print("distancia: ",runnningTime*0.034/2)
             if runnningTime>self.maxTimeEcho:
-                print("Sensor, no detecta. Verificamos nuevamente y con camara")
+                #print("Sensor, no detecta. Verificamos nuevamente y con camara")
                 #Ya no hay persona al frente. Pero verificamos nuevamente
                 """Calculamos nuevamente con el sensor y verificamos botón"""
                 #Haacemos una espera de 1 segundo
@@ -678,7 +678,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 while time.time()<temp_t:
                     if gpio.input(self.BUTTONpin)==False:
                         #Detenemos el sondeo
-                        print("Button pressed")
+                        #print("Button pressed")
                         self.timer_display.stop()
                         self.timer_display_temp.stop()
                         self.timer_activeUser.stop()
@@ -707,7 +707,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                     if time.time()>t_timeout:
                         break
                 runnningTime=(time.time()-t1)*1000000
-                print("distancia: ",runnningTime*0.034/2)
+                #print("distancia: ",runnningTime*0.034/2)
                 """Calculemos con la camara"""
                 #Procedemos a verificar si hay rostro detectado
                 vs = VideoStream(src=0,framerate=10).start()
@@ -720,7 +720,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 faces=face_cascade.detectMultiScale(gray,1.1,4)
                 if runnningTime>self.maxTimeEcho and len(faces)==0:
                     #Se ha ido la persona, apagamos los timers y nos vamos al modo sleep
-                    print("No hay nadie")
+                    #print("No hay nadie")
                     self.timer_activeUser.stop()
                     self.timer_display.stop()
                     self.timer_display_temp.stop()
@@ -754,8 +754,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
             temperature = str(int(main['temp']-273))
             # set value of temperature of Lima 
             self.ui.temperatura.setText(temperature)
-            # also, print for debug
-            #print("Temperature in Lima: "+temperature)
 
     def configureGPIOMirrol(self):
         """Relés"""
@@ -794,16 +792,16 @@ class mirrollGUI(QtWidgets.QMainWindow):
         self.actualAltura=self.perfiles[self.IdUserToShow][0]
         if diffAltura<0:
             #Bajamos motor
-            print("bajamos motor")
+            #print("bajamos motor")
             diffAltura=abs(diffAltura)
             self.BajarEspejo(diffAltura)
         elif diffAltura>0:
             #Subimos motor
-            print("subimos motor")
+            #print("subimos motor")
             self.SubirEspejo(diffAltura)
-        else:
+        #else:
             #mantenemos la altura
-            print("Dejamos la altura",self.actualAltura)
+            #print("Dejamos la altura",self.actualAltura)
 
     def setColorLeds(self,color):
         #actualizamos el color
