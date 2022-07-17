@@ -154,7 +154,7 @@ class sleepModeDialog(QtWidgets.QDialog):
             self.parent().setColorLeds("blanco")
             print("distancia:",runnningTime*0.034/2)
             #Verificamos rostro con camara y verificaremos N veces..
-            N_triesOfVerification=9
+            N_triesOfVerification=4
             nPhotosTaken=0
             idUserDetected=[]
             exitSleepMode=True
@@ -179,7 +179,7 @@ class sleepModeDialog(QtWidgets.QDialog):
                     # Detect the face boxes
                     boxes = FR_face_locations(frame)
                     # compute the facial embeddings for each face bounding box
-                    encodings = FR_face_encodings(frame, boxes)
+                    encodings = FR_face_encodings(frame, faces)
                     #definimos una variable para hallar que usuario tuvo mas match
                     idUserMatch=[0]*10
                     #De los encodings obtenidos (rostros calculados), verificamos con los conocidos
