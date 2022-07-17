@@ -834,6 +834,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 initTime=time.time_ns()
                 while time.time_ns()-initTime<STEPTIME:
                     pass
+            self.actualAltura=MINIMA_ALTURA_ESPEJO
         else:
             #Bajamos una cierta altura o hasta sentir el Limit switch
             salirDelFor=False
@@ -876,6 +877,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         adderStepTime=(STEPTIME-initSteptime)/initPulsesInSlow
         if distancia==-1:
             #Subimos el espejo hasta sentir el limit switch
+            self.actualAltura=MAXIMA_ALTURA_ESPEJO
             while gpio.input(self.LSUPpin)==0:#notar que se detiene en flanco de subida!
                 if tempSteptime<=STEPTIME:
                     tempSteptime=STEPTIME
@@ -893,6 +895,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 initTime=time.time_ns()
                 while time.time_ns()-initTime<tempSteptime:
                     pass
+            self.actualAltura=MAXIMA_ALTURA_ESPEJO
         else:
             salirDelFor=False
             #Subimos el espejo una cierta altura o hasta sentir el limit switch
