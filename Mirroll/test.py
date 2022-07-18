@@ -168,9 +168,14 @@ class Gui(QtWidgets.QMainWindow):
         origin = repo.remote(name='origin')
         origin.push()
 
+stylesheet="""
+    QMainWindow{
+        background:black
+    }
+"""
 
 app = QtWidgets.QApplication(sys.argv)
-
+app.setStyleSheet(stylesheet)
 window = Gui()
 window.show()
 sys.exit(app.exec())
