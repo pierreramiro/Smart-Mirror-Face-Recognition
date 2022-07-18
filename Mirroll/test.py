@@ -53,8 +53,8 @@ HEIGHT_SCREEN=1080
 MAXIMA_ALTURA_ESPEJO=20
 MINIMA_ALTURA_ESPEJO=0
 #Variable para el repo
-PATH_REPO='/home/mirroll/Documents/Github/Smart-Mirror-Face-Recognition'
-# PATH_REPO='/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition'
+#PATH_REPO='/home/mirroll/Documents/Github/Smart-Mirror-Face-Recognition'
+PATH_REPO='/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition'
 # PATH_REPO='/home/catolica/Documents/Github/Smart-Mirror-Face-Recognition'
 
 
@@ -63,6 +63,8 @@ dato=1
 class sleepModeDialog(QtWidgets.QDialog):
     def __init__(self,parent=None,val=0):
         super(sleepModeDialog,self).__init__(parent)
+
+        self.setCursor(QtCore.Qt.BlankCursor)
         self.val=val
         #nombre a la ventana
         self.setWindowTitle("Sleep!")
@@ -100,6 +102,8 @@ class sleepModeDialog(QtWidgets.QDialog):
 class warningBox (QtWidgets.QDialog):
     def __init__(self,parent=None,val=0):
         super(warningBox,self).__init__(parent)
+
+        self.setCursor(QtCore.Qt.BlankCursor)
         self.val=val
         #nombre a la ventana
         self.setWindowTitle("HELLO!")
@@ -129,6 +133,7 @@ class Gui(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         #Creamos nuestra GUI
+        self.setCursor(QtCore.Qt.BlankCursor)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
