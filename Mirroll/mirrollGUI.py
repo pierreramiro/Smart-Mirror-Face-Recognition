@@ -378,6 +378,8 @@ class BT_DialogBox (QtWidgets.QDialog):
                 #Salimos del modo BtConnected
                 self.close()
                 self.timer_Datos.stop()
+                #Y agregamos un delay en lo que se suelta el boton
+                time.sleep(1)
 
             
     #Esta función por si sola nos permite aceptar el evento de cierre (not modified)
