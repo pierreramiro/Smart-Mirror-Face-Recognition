@@ -904,6 +904,11 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 else:
                     tempSteptime+=adderStepTime
                 
+                #Verificamos limit SW
+                if gpio.input(self.LSDOWNpin)!=0:
+                    self.actualAltura=MINIMA_ALTURA_ESPEJO
+                    break
+
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
@@ -917,10 +922,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 initTime=time.time_ns()
                 while time.time_ns()-initTime<tempSteptime:
                     pass
-                #Verificamos limit SW
-                if gpio.input(self.LSDOWNpin)!=0:
-                    self.actualAltura=MINIMA_ALTURA_ESPEJO
-                    break
         gpio.output(self.ENApin,gpio.HIGH)
     
     def SubirEspejo(self,distancia=-1): 
@@ -963,6 +964,11 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 else:
                     tempSteptime+=adderStepTime
                 
+                #Verificamos limit SW
+                if gpio.input(self.LSUPpin)!=0:
+                    self.actualAltura=MAXIMA_ALTURA_ESPEJO
+                    break
+                
                 #Ponemos en HIGH
                 gpio.output(self.PULpin,gpio.HIGH)        
                 #Esperamos en HIGH
@@ -976,10 +982,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
                 initTime=time.time_ns()
                 while time.time_ns()-initTime<tempSteptime:
                     pass
-                #Verificamos limit SW
-                if gpio.input(self.LSUPpin)!=0:
-                    self.actualAltura=MAXIMA_ALTURA_ESPEJO
-                    break
         #Deshabilitamos el driver del motor
         gpio.output(self.ENApin,gpio.HIGH)
 

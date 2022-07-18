@@ -94,6 +94,11 @@ def BajarEspejo(distancia=-1):
             else:
                 tempSteptime+=adderStepTime
             
+            #Verificamos limit SW
+            if gpio.input(LSDOWNpin)!=0:
+                actualAltura=MINIMA_ALTURA_ESPEJO
+                break
+
             #Ponemos en HIGH
             gpio.output(PULpin,gpio.HIGH)        
             #Esperamos en HIGH
@@ -152,7 +157,10 @@ def SubirEspejo(distancia=-1):
                 tempSteptime=STEPTIME
             else:
                 tempSteptime+=adderStepTime
-            
+            #Verificamos limit SW
+            if gpio.input(LSUPpin)!=0:
+                actualAltura=MAXIMA_ALTURA_ESPEJO
+                break
             #Ponemos en HIGH
             gpio.output(PULpin,gpio.HIGH)        
             #Esperamos en HIGH
@@ -166,10 +174,6 @@ def SubirEspejo(distancia=-1):
             initTime=time.time_ns()
             while time.time_ns()-initTime<tempSteptime:
                 pass
-            #Verificamos limit SW
-            if gpio.input(LSUPpin)!=0:
-                actualAltura=MAXIMA_ALTURA_ESPEJO
-                break
     #Deshabilitamos el driver del motor
     gpio.output(ENApin,gpio.HIGH)
 
@@ -206,5 +210,5 @@ if __name__=="__main__":
         #gpio.output(ENApin,gpio.HIGH)
         #gpio.output(DIRpin,gpio.LOW)
         #gpio.output(PULpin,gpio.HIGH)
-        #BajarEspejo()    
-        SubirEspejo()
+        BajarEspejo(1)    
+        #SubirEspejo(1)
