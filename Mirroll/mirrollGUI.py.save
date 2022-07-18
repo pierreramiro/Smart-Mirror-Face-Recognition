@@ -62,9 +62,9 @@ PATH_REPO='/home/mirroll/Documents/Github/Smart-Mirror-Face-Recognition'
 class sleepModeDialog(QtWidgets.QDialog):
     def __init__(self,parent=None):
         super(sleepModeDialog,self).__init__(parent)
-        # Desaparecemos el titleBar
+        
+# Desaparecemos el titleBar
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
-        self.setCursor(QtCore.Qt.BlankCursor)
         # Establecemos el tamaño de la pantalla
         self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
         # Establecemos el fondo de color negro
@@ -242,7 +242,6 @@ class BT_DialogBox (QtWidgets.QDialog):
         super(BT_DialogBox,self).__init__(parent)
         #Desaparecemos el titleBar
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
-        self.setCursor(QtCore.Qt.BlankCursor)
         #Establecemos el tamaño de la pantalla
         self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
         #Establecemos el fondo de color negro
@@ -278,15 +277,15 @@ class BT_DialogBox (QtWidgets.QDialog):
             return
         #recibir data:   [funcion,idUser,color,BINtomacorrientes,altura]
         received_data = self.ser.read()              #read serial port
+        # time.sleep(0.03)
+        # data_left = self.ser.inWaiting()             #check for remaining byte
+        # received_data += self.ser.read(data_left)
         if len(received_data)!=0:
-            time.sleep(0.03)
-            data_left = self.ser.inWaiting()             #check for remaining byte
-            received_data += self.ser.read(data_left)
             #Desactivamos sondeo, porque hemos recibido información. Lo activamos nuevamente al final
             #Esto lo hacemos para asegurar los tiempos entre timeouts
             self.timer_Datos.stop()
             #Decodificamos data
-            print("received data: ",received_data)
+            #print("received data: ",received_data)
             received_data=eval(received_data.decode())
             #Con el primer elemento podemos revisar que función aplicamos
             if received_data[0]==0:
@@ -403,7 +402,6 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         parent.AddingNewUser=True
         #Desaparecemos el titleBar
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
-        self.setCursor(QtCore.Qt.BlankCursor)
         #Establecemos el tamaño de la pantalla
         self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
         #Establecemos el fondo de color negro
@@ -578,7 +576,6 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Creamos nuestra GUI
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setCursor(QtCore.Qt.BlankCursor)
         #Establecemos info por defecto
         # self.fecha_actual="viernes, 10 de junio del 2022"
         # self.hora_actual="18:00 pm"
