@@ -346,6 +346,15 @@ class BT_DialogBox (QtWidgets.QDialog):
                 repo = Repo(PATH_REPO)
                 origin = repo.remote(name='origin')
                 origin.pull()
+                """HACEMOS UN PUSH"""
+                #añadimos todos los archivos modificados
+                repo.git.add('--all')
+                #Añadimos comentario
+                t=repo.head.commit.tree
+                if len(list(repo.git.diff(t)))>0:
+                    repo.git.commit('-m', f'usuario {self.idUser} foto N.{self.countPics}')
+                    origin = repo.remote(name='origin')
+                    origin.push()
                 #Salimos del modo BtConnected
                 self.close()
             else:
@@ -377,6 +386,15 @@ class BT_DialogBox (QtWidgets.QDialog):
                 repo = Repo(PATH_REPO)
                 origin = repo.remote(name='origin')
                 origin.pull()
+                """HACEMOS UN PUSH"""
+                #añadimos todos los archivos modificados
+                repo.git.add('--all')
+                #Añadimos comentario
+                t=repo.head.commit.tree
+                if len(list(repo.git.diff(t)))>0:
+                    repo.git.commit('-m', f'usuario {self.idUser} foto N.{self.countPics}')
+                    origin = repo.remote(name='origin')
+                    origin.push()
                 #Salimos del modo BtConnected
                 self.close()
                 self.timer_Datos.stop()
