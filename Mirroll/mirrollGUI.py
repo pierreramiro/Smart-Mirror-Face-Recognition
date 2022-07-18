@@ -64,6 +64,7 @@ class sleepModeDialog(QtWidgets.QDialog):
         super(sleepModeDialog,self).__init__(parent)
         # Desaparecemos el titleBar
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
+        self.setCursor(QtCore.Qt.BlankCursor)
         # Establecemos el tamaño de la pantalla
         self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
         # Establecemos el fondo de color negro
@@ -241,6 +242,7 @@ class BT_DialogBox (QtWidgets.QDialog):
         super(BT_DialogBox,self).__init__(parent)
         #Desaparecemos el titleBar
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
+        self.setCursor(QtCore.Qt.BlankCursor)
         #Establecemos el tamaño de la pantalla
         self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
         #Establecemos el fondo de color negro
@@ -401,6 +403,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         parent.AddingNewUser=True
         #Desaparecemos el titleBar
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
+        self.setCursor(QtCore.Qt.BlankCursor)
         #Establecemos el tamaño de la pantalla
         self.setGeometry(0,0, WIDTH_SCREEN, HEIGHT_SCREEN)
         #Establecemos el fondo de color negro
@@ -575,6 +578,7 @@ class mirrollGUI(QtWidgets.QMainWindow):
         #Creamos nuestra GUI
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.setCursor(QtCore.Qt.BlankCursor)
         #Establecemos info por defecto
         # self.fecha_actual="viernes, 10 de junio del 2022"
         # self.hora_actual="18:00 pm"
