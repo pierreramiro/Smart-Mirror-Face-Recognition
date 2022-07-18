@@ -353,9 +353,14 @@ class BT_DialogBox (QtWidgets.QDialog):
             if not(self.CloseWindow):
                 self.timer_Datos.start()
         if gpio.input(self.parent().BUTTONpin)==False:
-            #Button pressed. Verificamos si si pasan 5 segundos paara salir de este modo
-            time.sleep(3)
-            if gpio.input(self.parent().BUTTONpin)==False:
+            #Button pressed. Verificamos si si pasan 3 segundos paara salir de este modo
+            t=time.time()
+            while gpio.input(self.parent().BUTTONpin)==False:
+                time.sleep(0.2)
+                if time.time()-t>3:
+                    break
+            t=time.time()-t
+            if t>3:
                 #Salimos del modo BtConnected
                 #Guardamos los nuevos perfiles en un csv
                 file=open("userConfig.csv","w")
