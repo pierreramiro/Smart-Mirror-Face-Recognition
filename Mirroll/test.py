@@ -164,9 +164,11 @@ class Gui(QtWidgets.QMainWindow):
         #añadimos todos los archivos modificados
         repo.git.add('--all')
         #Añadimos comentario
+        prevCommiCount=len(list(repo.iter_commits()))
         repo.git.commit('-m', 'boton pressed')
-        origin = repo.remote(name='origin')
-        origin.push()
+        if len(list(repo.iter_commits()))>prevCommiCount:
+            origin = repo.remote(name='origin')
+            origin.push()
 
 stylesheet="""
     QMainWindow{
