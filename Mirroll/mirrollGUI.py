@@ -428,7 +428,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.countPics=0
         self.picTaken=False
         self.ponerNuevaPose=True
-        self.maxNumbersPics=20
+        self.maxNumbersPics=18
         #Creamos unos widgets
         self.imageLabel = QtWidgets.QLabel()
         self.sencondLine = QtWidgets.QLabel("Coloque su rostro como muestra la imagen")   
@@ -442,6 +442,7 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         self.timer_one.timeout.connect(self.takePicsNewUser)
         self.timer_two=QTimer()
         self.timer_two.timeout.connect(self.processPicsNewUser)
+        time.sleep(0.3)
         #print("Salimos del init FR")
         
     def initMirrolUp(self):
