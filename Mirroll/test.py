@@ -133,7 +133,7 @@ class Gui(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         #Creamos nuestra GUI
-        self.setCursor(QtCore.Qt.BlankCursor)
+        #self.setCursor(QtCore.Qt.BlankCursor)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
