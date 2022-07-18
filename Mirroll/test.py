@@ -53,8 +53,8 @@ HEIGHT_SCREEN=1080
 MAXIMA_ALTURA_ESPEJO=20
 MINIMA_ALTURA_ESPEJO=0
 #Variable para el repo
-#PATH_REPO='/home/mirroll/Documents/Github/Smart-Mirror-Face-Recognition'
-PATH_REPO='/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition'
+PATH_REPO='/home/mirroll/Documents/Github/Smart-Mirror-Face-Recognition'
+#PATH_REPO='/home/pierreramiro/Documents/Github/Smart-Mirror-Face-Recognition'
 # PATH_REPO='/home/catolica/Documents/Github/Smart-Mirror-Face-Recognition'
 
 
