@@ -73,7 +73,7 @@ class sleepModeDialog(QtWidgets.QDialog):
         self.layout = QtWidgets.QVBoxLayout()
         # loading image
         image = QImage('resources/Bt.png')
-        image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
+        image=image.scaled(int(WIDTH_SCREEN/1.5), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
         self.imageLabel = QtWidgets.QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
         self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
