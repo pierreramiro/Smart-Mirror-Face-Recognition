@@ -286,7 +286,7 @@ class BT_DialogBox (QtWidgets.QDialog):
             #Esto lo hacemos para asegurar los tiempos entre timeouts
             self.timer_Datos.stop()
             #Decodificamos data
-            print("received data: ",received_data)
+            #print("received data: ",received_data)
             received_data=eval(received_data.decode())
             #Con el primer elemento podemos revisar que función aplicamos
             if received_data[0]==0:
