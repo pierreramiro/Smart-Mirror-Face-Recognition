@@ -249,13 +249,12 @@ class BT_DialogBox (QtWidgets.QDialog):
         self.layout=QtWidgets.QVBoxLayout()
         #Creo el texto a mostrar
         message = QtWidgets.QLabel("Se ha presionado el botón. Recibiendo información Bluetooth")
-        message.setStyleSheet("font: 48pt \"Arial Rounded MT Bold\";color:white")
-        message.setStyleSheet("color: white")
+        message.setStyleSheet("font: 34pt \"Arial Rounded MT Bold\";color:white")
         message.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(message)
         #Creo la imagen
         image = QImage('resources/Bt.png')
-        image=image.scaled(int(WIDTH_SCREEN/3), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
+        image=image.scaled(int(WIDTH_SCREEN/1.5), int(HEIGHT_SCREEN-40), QtCore.Qt.KeepAspectRatio)
         self.imageLabel = QtWidgets.QLabel()
         self.imageLabel.setPixmap(QPixmap.fromImage(image))
         self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
