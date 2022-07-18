@@ -537,9 +537,11 @@ class configureUser_DialogBox (QtWidgets.QDialog):
         #añadimos todos los archivos modificados
         repo.git.add('--all')
         #Añadimos comentario
-        repo.git.commit('-m', f'usuario {self.idUser} foto N.{self.countPics}')
-        origin = repo.remote(name='origin')
-        origin.push() 
+        t=repo.head.commit.tree
+        if len(list(repo.git.diff(t)))>0:
+            repo.git.commit('-m', f'usuario {self.idUser} foto N.{self.countPics}')
+            origin = repo.remote(name='origin')
+            origin.push()
         
         #detectamos los rostros boxes
         boxes = FR_face_locations(rgb,model="hog") #Se escoge el modelo hog
