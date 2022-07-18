@@ -352,7 +352,7 @@ class BT_DialogBox (QtWidgets.QDialog):
                 #Añadimos comentario
                 t=repo.head.commit.tree
                 if len(list(repo.git.diff(t)))>0:
-                    repo.git.commit('-m', f'usuario {self.idUser} foto N.{self.countPics}')
+                    repo.git.commit('-m', "New User config")
                     origin = repo.remote(name='origin')
                     origin.push()
                 #Salimos del modo BtConnected
@@ -392,7 +392,7 @@ class BT_DialogBox (QtWidgets.QDialog):
                 #Añadimos comentario
                 t=repo.head.commit.tree
                 if len(list(repo.git.diff(t)))>0:
-                    repo.git.commit('-m', f'usuario {self.idUser} foto N.{self.countPics}')
+                    repo.git.commit('-m', "New User config")
                     origin = repo.remote(name='origin')
                     origin.push()
                 #Salimos del modo BtConnected
